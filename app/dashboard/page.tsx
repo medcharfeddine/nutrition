@@ -86,7 +86,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-indigo-600">NutriÉd</h1>
+              <h1 className="text-2xl font-bold text-indigo-600"><a href="/">NutriÉd</a></h1>
               <div className="hidden md:flex gap-6">
                 <Link
                   href="/dashboard"
