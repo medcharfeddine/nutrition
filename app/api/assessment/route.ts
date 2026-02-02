@@ -29,12 +29,27 @@ const assessmentSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
+    const body = await req.json();
 
-    if (!session || !session.user) {
+    // Allow assessment submission for newly registered users (with email verification)
+    // or authenticated users
+    let userId: string;
+    let userEmail: string;
+    let userName: string;
+
+    if (session && session.user) {
+      // Authenticated user
+      userId = session.user.id;
+      userEmail = session.user.email || '';
+      userName = session.user.name || '';
+    } else if (body.userId && body.userEmail) {
+      // Newly registered user (passed during signup)
+      userId = body.userId;
+      userEmail = body.userEmail;
+      userName = body.fullName;
+    } else {
       return NextResponse.json({ error: 'Non autorise' }, { status: 401 });
     }
-
-    const body = await req.json();
 
     const validatedData = assessmentSchema.safeParse(body);
 
@@ -51,18 +66,27 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const assessment = await Assessment.create({
-      userId: session.user.id,
-      userName: session.user.name,
-      userEmail: session.user.email,
+      userId,
+      userName,
+      userEmail,
       ...validatedData.data,
     });
 
     // Mark user as having completed assessment
-    await User.findByIdAndUpdate(
-      session.user.id,
-      { hasCompletedAssessment: true },
-      { new: true }
-    );
+    if (session && session.user && session.user.id) {
+      await User.findByIdAndUpdate(
+        session.user.id,
+        { hasCompletedAssessment: true },
+        { new: true }
+      );
+    } else {
+      // For newly registered users, update by ID passed in request
+      await User.findByIdAndUpdate(
+        userId as string,
+        { hasCompletedAssessment: true },
+        { new: true }
+      );
+    }
 
     return NextResponse.json(
       { message: 'Evaluation enregistree avec succes', assessment },

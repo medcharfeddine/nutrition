@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: 'Utilisateur enregistre avec succes', user: { email: user.email, name: user.name } },
+      { message: 'Utilisateur enregistre avec succes', user: { id: user._id.toString(), email: user.email, name: user.name } },
       { status: 201 }
     );
   } catch (error) {

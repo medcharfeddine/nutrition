@@ -1,16 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [branding, setBranding] = useState<any>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    fetchBranding();
+  }, []);
+
+  const fetchBranding = async () => {
+    try {
+      const res = await fetch('/api/admin/branding');
+      if (res.ok) {
+        const data = await res.json();
+        setBranding(data.branding);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branding:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +58,18 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
+          {branding?.logoUrl ? (
+            <Image 
+              src={branding.logoUrl} 
+              alt={branding.siteName || 'NutriEd'} 
+              width={80}
+              height={80}
+              className="h-20 w-auto mx-auto mb-4"
+              priority
+            />
+          ) : (
+            <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
+          )}
           <p className="text-gray-600">Education Nutritionnelle Personnalisee</p>
         </div>
 

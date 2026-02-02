@@ -9,7 +9,7 @@ const credentialsSchema = z.object({
   password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caracteres'),
 });
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const authConfig = {
   providers: [
     Credentials({
       credentials: {
@@ -73,4 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-});
+  trustHost: true,
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

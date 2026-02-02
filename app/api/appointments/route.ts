@@ -165,8 +165,10 @@ export async function GET(request: NextRequest) {
 
     // Filter by role
     if (role === 'admin') {
-      query.specialistId = session.user.id;
+      // Admin sees ALL appointments
+      // No user/specialist filter needed
     } else {
+      // Regular users see only their own appointments
       query.userId = session.user.id;
     }
 

@@ -32,7 +32,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextStepsCompleted, setNextStepsCompleted] = useState<{[key: number]: boolean}>({
-    0: session?.user?.hasCompletedAssessment || false,
     1: false,
     2: false,
     3: false,
@@ -261,26 +260,40 @@ export default function DashboardPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Prochaines Etapes</h3>
           <ul className="space-y-3">
             {[
-              'Terminer l\'evaluation nutritionnelle',
-              'Definir les objectifs alimentaires',
-              'Obtenir un plan de repas personnalise',
-              'Suivre votre progression',
-            ].map((step, index) => (
-              <li key={index} className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={nextStepsCompleted[index]}
-                  onChange={(e) =>
-                    setNextStepsCompleted((prev) => ({
-                      ...prev,
-                      [index]: e.target.checked,
-                    }))
-                  }
-                  className="w-5 h-5 text-indigo-600 rounded cursor-pointer"
-                />
-                <span className={`text-gray-700 ${ nextStepsCompleted[index] ? 'line-through text-gray-400' : ''}`}>{step}</span>
-              </li>
-            ))}
+              { label: 'Terminer l\'evaluation nutritionnelle', completed: session?.user?.hasCompletedAssessment || false },
+              { label: 'Definir les objectifs alimentaires', completed: nextStepsCompleted[1] },
+              { label: 'Obtenir un plan de repas personnalise', completed: nextStepsCompleted[2] },
+              { label: 'Suivre votre progression', completed: nextStepsCompleted[3] },
+            ]
+              .filter((step) => !step.completed || nextStepsCompleted[Object.keys(nextStepsCompleted).find(k => nextStepsCompleted[parseInt(k)] === step.completed) as any])
+              .map((step, index) => (
+                <li key={index} className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={step.completed}
+                    onChange={(e) => {
+                      const stepIndex = [
+                        { label: 'Terminer l\'evaluation nutritionnelle', completed: session?.user?.hasCompletedAssessment || false },
+                        { label: 'Definir les objectifs alimentaires', completed: nextStepsCompleted[1] },
+                        { label: 'Obtenir un plan de repas personnalise', completed: nextStepsCompleted[2] },
+                        { label: 'Suivre votre progression', completed: nextStepsCompleted[3] },
+                      ].findIndex(s => s.label === step.label);
+                      if (stepIndex > 0) {
+                        setNextStepsCompleted((prev) => ({
+                          ...prev,
+                          [stepIndex]: e.target.checked,
+                        }));
+                      }
+                    }}
+                    disabled={step.label === 'Terminer l\'evaluation nutritionnelle'}
+                    className="w-5 h-5 text-indigo-600 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <span className={`text-gray-700 ${step.completed ? 'line-through text-gray-400' : ''}`}>{step.label}</span>
+                </li>
+              ))}
+            {session?.user?.hasCompletedAssessment && (
+              <li className="text-sm text-green-600 font-semibold">✓ Évaluation nutritionnelle complétée!</li>
+            )}
           </ul>
         </div>
       </main>

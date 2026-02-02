@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [branding, setBranding] = useState<any>(null);
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
@@ -28,8 +30,21 @@ export default function ProfilePage() {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       fetchUserProfile();
+      fetchBranding();
     }
   }, [status, router]);
+
+  const fetchBranding = async () => {
+    try {
+      const res = await fetch('/api/admin/branding');
+      if (res.ok) {
+        const data = await res.json();
+        setBranding(data.branding);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branding:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -123,7 +138,20 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-indigo-600">NutriEd</h1>
+              <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
+                {branding?.logoUrl ? (
+                  <Image 
+                    src={branding.logoUrl} 
+                    alt={branding.siteName || 'NutriEd'} 
+                    width={40}
+                    height={40}
+                    className="h-10 w-auto"
+                    priority
+                  />
+                ) : (
+                  <h1 className="text-2xl font-bold text-indigo-600">NutriEd</h1>
+                )}
+              </Link>
               <div className="hidden md:flex gap-6">
                 <Link
                   href="/dashboard"

@@ -3,31 +3,59 @@
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [branding, setBranding] = useState<any>(null);
 
   useEffect(() => {
     if (session) {
       router.push('/dashboard');
     }
+    fetchBranding();
   }, [session, router]);
 
+  const fetchBranding = async () => {
+    try {
+      const res = await fetch('/api/admin/branding');
+      if (res.ok) {
+        const data = await res.json();
+        setBranding(data.branding);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branding:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
-      <nav className="bg-gray-900 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg border-b border-gray-700">
+      <nav className="bg-white bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-white drop-shadow-lg">NutriEd</h1>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
+              {branding?.logoUrl ? (
+                <Image 
+                  src={branding.logoUrl} 
+                  alt={branding.siteName || 'NutriEd'} 
+                  width={40}
+                  height={40}
+                  className="h-10 w-auto"
+                  priority
+                />
+              ) : (
+                <h1 className="text-2xl font-bold text-indigo-600 drop-shadow-lg">NutriEd</h1>
+              )}
+            </Link>
             <div className="flex gap-4">
               {status === 'unauthenticated' && (
                 <>
                   <Link
                     href="/auth/login"
-                    className="text-white hover:text-gray-200 font-semibold"
+                    className="text-gray-700 hover:text-gray-900 font-semibold"
                   >
                     Connexion
                   </Link>
@@ -46,10 +74,10 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h2 className="text-5xl sm:text-6xl font-bold text-white mb-6 leading-tight">
-          Votre Parcours vers une Meilleure <span className="text-yellow-200">Nutrition</span> Commence Ici
+        <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          Votre Parcours vers une Meilleure <span className="text-yellow-400">Nutrition</span> Commence Ici
         </h2>
-        <p className="text-xl text-white mb-8 max-w-3xl mx-auto">
+        <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
           Education nutritionnelle personnalisee adaptee a votre mode de vie, vos objectifs et vos preferences. 
           Obtenez des conseils d'experts, des plans de repas et un suivi de la progression, tout en un seul endroit.
         </p>
@@ -71,28 +99,28 @@ export default function Home() {
 
       {/* Features */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h3 className="text-3xl font-bold text-white text-center mb-12">Pourquoi Choisir NutriEd?</h3>
+        <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">Pourquoi Choisir NutriEd?</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-gray-800 hover:bg-gray-700 rounded-lg p-8 text-white transition border border-gray-700">
+          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
             <div className="text-4xl mb-4">🎯</div>
             <h4 className="text-xl font-bold mb-3">Plans Personnalises</h4>
-            <p className="text-gray-300">
+            <p className="text-gray-600">
               Obtenez des plans nutritionnels adaptes a votre age, votre mode de vie, vos objectifs et vos preferences alimentaires.
             </p>
           </div>
 
-          <div className="bg-gray-800 hover:bg-gray-700 rounded-lg p-8 text-white transition border border-gray-700">
+          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
             <div className="text-4xl mb-4">📊</div>
             <h4 className="text-xl font-bold mb-3">Suivre la Progression</h4>
-            <p className="text-gray-300">
+            <p className="text-gray-600">
               Surveillez votre consommation nutritionnelle, votre perte de poids et vos metriques de sante avec des analyses detaillees.
             </p>
           </div>
 
-          <div className="bg-gray-800 hover:bg-gray-700 rounded-lg p-8 text-white transition border border-gray-700">
+          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
             <div className="text-4xl mb-4">📚</div>
             <h4 className="text-xl font-bold mb-3">Contenu Expert</h4>
-            <p className="text-gray-300">
+            <p className="text-gray-600">
               Apprenez des nutritionnistes et des experts en sante par le biais de videos, d'articles et d'infographies.
             </p>
           </div>
@@ -100,20 +128,20 @@ export default function Home() {
       </div>
 
       {/* Statistics */}
-      <div className="bg-gray-800 border-t border-gray-700 py-16">
+      <div className="bg-white border-t border-gray-200 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-gray-900">
             <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-400">10K+</div>
-              <p className="text-gray-300">Utilisateurs Actifs</p>
+              <div className="text-4xl font-bold mb-2 text-indigo-600">10K+</div>
+              <p className="text-gray-600">Utilisateurs Actifs</p>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-400">500+</div>
-              <p className="text-gray-300">Plans de Repas</p>
+              <div className="text-4xl font-bold mb-2 text-indigo-600">500+</div>
+              <p className="text-gray-600">Plans de Repas</p>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-400">95%</div>
-              <p className="text-gray-300">Taux de Satisfaction</p>
+              <div className="text-4xl font-bold mb-2 text-indigo-600">95%</div>
+              <p className="text-gray-600">Taux de Satisfaction</p>
             </div>
           </div>
         </div>
@@ -121,8 +149,8 @@ export default function Home() {
 
       {/* CTA Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h3 className="text-3xl font-bold text-white mb-6">Pret a Transformer votre Nutrition?</h3>
-        <p className="text-xl text-white mb-8">
+        <h3 className="text-3xl font-bold text-gray-900 mb-6">Pret a Transformer votre Nutrition?</h3>
+        <p className="text-xl text-gray-700 mb-8">
           Rejoignez des milliers de personnes qui ont ameliore leur sante avec NutriEd
         </p>
         <Link
@@ -134,7 +162,7 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 text-center border-t border-gray-700">
+      <footer className="bg-white text-gray-600 py-8 text-center border-t border-gray-200">
         <p>&copy; 2026 NutriÉd. Tous droits réservés. | Construit avec Next.js, MongoDB & IA</p>
       </footer>
     </div>
