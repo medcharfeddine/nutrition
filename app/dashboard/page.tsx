@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/language-provider';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
@@ -34,6 +35,7 @@ export default function DashboardPage() {
   const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [branding, setBranding] = useState<any>(null);
   const [nextStepsCompleted, setNextStepsCompleted] = useState<{[key: number]: boolean}>({
     1: false,
     2: false,
@@ -45,6 +47,7 @@ export default function DashboardPage() {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       fetchUserProfile();
+      fetchBranding();
     }
   }, [status, router]);
 
@@ -59,6 +62,18 @@ export default function DashboardPage() {
       console.error('Failed to fetch profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBranding = async () => {
+    try {
+      const res = await fetch('/api/admin/branding');
+      if (res.ok) {
+        const data = await res.json();
+        setBranding(data.branding);
+      }
+    } catch (error) {
+      console.error('Failed to fetch branding:', error);
     }
   };
 
@@ -87,40 +102,52 @@ export default function DashboardPage() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600"><a href="/">NutriÉd</a></h1>
-              <div className="hidden md:flex gap-4 md:gap-6">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
-                >
-                  {t('common.dashboard')}
-                </Link>
-                <Link
-                  href="/messages"
-                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
-                >
-                  Messages
-                </Link>
-                <Link
-                  href="/consultation-request"
-                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
-                >
-                  {t('common.dashboard')}
-                </Link>
-                <Link
-                  href="/appointments"
-                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
-                >
-                  {t('common.appointments')}
-                </Link>
-                <Link
-                  href="/profile"
-                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
-                >
-                  {t('common.profile')}
-                </Link>
-              </div>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
+              {branding?.logoUrl ? (
+                <Image 
+                  src={branding.logoUrl} 
+                  alt={branding.siteName || 'NutriEd'} 
+                  width={100}
+                  height={100}
+                  className="h-8 sm:h-10 w-auto object-contain"
+                  quality={95}
+                  priority
+                />
+              ) : (
+                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriÉd</h1>
+              )}
+            </Link>
+            <div className="hidden md:flex gap-4 md:gap-6">
+              <Link
+                href="/dashboard"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
+              >
+                {t('common.dashboard')}
+              </Link>
+              <Link
+                href="/messages"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
+              >
+                Messages
+              </Link>
+              <Link
+                href="/consultation-request"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
+              >
+                {t('common.dashboard')}
+              </Link>
+              <Link
+                href="/appointments"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
+              >
+                {t('common.appointments')}
+              </Link>
+              <Link
+                href="/profile"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
+              >
+                {t('common.profile')}
+              </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               <LanguageSwitcher />
