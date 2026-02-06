@@ -6,9 +6,12 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import FileUpload from '@/components/FileUpload';
 import { useBranding } from '@/lib/branding-provider';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 // Branding Tab Component
 function BrandingTab() {
+  const { t } = useLanguage();
   const [branding, setBranding] = useState({
     siteName: '',
     siteDescription: '',
@@ -72,14 +75,14 @@ function BrandingTab() {
       });
 
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Branding mis à jour avec succès!' });
+        setMessage({ type: 'success', text: t('common.brandingUpdated') });
       } else {
         const error = await res.json();
-        setMessage({ type: 'error', text: error.error || 'Erreur lors de la mise à jour' });
+        setMessage({ type: 'error', text: error.error || t('admin.errorUpdating') });
       }
     } catch (error) {
       console.error('Failed to save branding:', error);
-      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde' });
+      setMessage({ type: 'error', text: t('admin.errorSaving') });
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,7 @@ function BrandingTab() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Configuration du Branding</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('common.brandingConfig')}</h2>
 
       {message.text && (
         <div
@@ -236,6 +239,7 @@ export default function AdminPage() {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { siteName, siteDescription, logoUrl } = useBranding();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
@@ -350,7 +354,40 @@ export default function AdminPage() {
     setEditingUserData(JSON.parse(JSON.stringify(user))); // Deep copy
     setIsEditingUser(false);
     setShowUserModal(true);
+    
+    // Fetch assessment data from database
+    fetchUserAssessment(user._id);
   };
+
+  const fetchUserAssessment = async (userId: string) => {
+    try {
+      // Find assessment in the already fetched assessments array
+      const userAssessment = assessments.find((a: any) => a.userId === userId);
+      
+      if (userAssessment) {
+        // Update selectedUser with the assessment from DB
+        setSelectedUser((prev: any) => ({
+          ...prev,
+          assessment: userAssessment,
+        }));
+        
+        // Also update editingUserData if in edit mode
+        setEditingUserData((prev: any) => ({
+          ...prev,
+          assessment: userAssessment,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch assessment:', error);
+    }
+  };
+
+  // Sync selected user's assessment when assessments are updated
+  useEffect(() => {
+    if (selectedUser && showUserModal && assessments) {
+      fetchUserAssessment(selectedUser._id);
+    }
+  }, [assessments, selectedUser?._id, showUserModal]);
 
   const startEditingUser = () => {
     const userData = JSON.parse(JSON.stringify(selectedUser));
@@ -358,7 +395,7 @@ export default function AdminPage() {
     if (!userData.profile) {
       userData.profile = {};
     }
-    // Ensure assessment object exists
+    // Ensure assessment object exists with all current data
     if (!userData.assessment) {
       userData.assessment = {};
     }
@@ -395,7 +432,7 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Failed to save user:', error);
-      alert('Erreur lors de la sauvegarde');
+      alert(t('admin.errorSaving'));
     } finally {
       setIsSavingUser(false);
     }
@@ -443,7 +480,7 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Failed to save content:', error);
-      alert('Erreur lors de la sauvegarde du contenu');
+      alert(t('admin.errorSavingContent'));
     }
   };
 
@@ -504,7 +541,7 @@ export default function AdminPage() {
         }
       } catch (error) {
         console.error('Failed to delete content:', error);
-        alert('Erreur lors de la suppression');
+        alert(t('admin.errorDeleeting'));
       }
     }
   };
@@ -514,7 +551,7 @@ export default function AdminPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -528,38 +565,45 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               {logoUrl && (
                 <img
                   src={logoUrl}
                   alt={siteName || 'Logo'}
-                  className="h-12 w-auto"
+                  className="h-8 sm:h-10 w-auto"
                 />
               )}
               <div className="flex flex-col">
-                <h1 className="text-2xl font-bold text-indigo-600">{siteName || 'NutriEd'} Admin</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{siteName || 'NutriEd'}</h1>
                 {siteDescription && (
-                  <p className="text-xs text-gray-500">{siteDescription}</p>
+                  <p className="text-xs text-gray-500 hidden sm:block">{siteDescription.substring(0, 30)}...</p>
                 )}
               </div>
-              <div className="hidden md:flex gap-6 ml-4">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
-                >
-                  Dashboard
-                </Link>
-              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Admin: {session.user?.name}</span>
+            <div className="hidden md:flex gap-2 lg:gap-4 items-center">
+              <LanguageSwitcher />
+              <Link
+                href="/dashboard"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm"
+              >
+                Dashboard
+              </Link>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
               >
-                Deconnexion
+                Déconnexion
+              </button>
+            </div>
+            <div className="md:hidden flex items-center gap-2">
+              <LanguageSwitcher />
+              <button
+                onClick={handleSignOut}
+                className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-medium"
+              >
+                Déc.
               </button>
             </div>
           </div>
@@ -567,103 +611,110 @@ export default function AdminPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600 font-semibold">⚠️ {error}</p>
+          <div className="sticky top-14 sm:top-16 z-30 mx-3 sm:mx-4 md:mx-6 lg:mx-8 mt-4 sm:mt-6 md:mt-8 mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+            <p className="text-red-600 font-semibold text-sm sm:text-base break-words">⚠️ {error}</p>
           </div>
         )}
-        <div className="bg-white rounded-lg shadow-md">
-          {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <div className="flex">
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 w-full overflow-hidden">
+            {/* Tabs */}
+            <div className="border-b border-gray-200 overflow-x-auto sticky top-14 sm:top-16 z-40 bg-white -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8">
+              <div className="flex gap-1">
               <button
                 onClick={() => setActiveTab('users')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'users'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Utilisateurs ({users.length})
+                <span className="inline sm:hidden">👥</span>
+                <span className="hidden sm:inline">Utilisateurs</span>
               </button>
               <button
                 onClick={() => setActiveTab('assessments')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'assessments'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Evaluations ({assessments.length})
+                <span className="inline sm:hidden">📋</span>
+                <span className="hidden sm:inline">Évaluations</span>
               </button>
               <button
                 onClick={() => setActiveTab('content')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'content'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Contenu ({contents.length})
+                <span className="inline sm:hidden">📝</span>
+                <span className="hidden sm:inline">Contenu</span>
               </button>
               <button
                 onClick={() => setActiveTab('appointments')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'appointments'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Rendez-vous
+                <span className="inline sm:hidden">📅</span>
+                <span className="hidden sm:inline">Rendez-vous</span>
               </button>
               <button
                 onClick={() => setActiveTab('consultations')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'consultations'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Demandes de Consultation ({consultationRequests.length})
+                <span className="inline sm:hidden">💬</span>
+                <span className="hidden sm:inline">Consultations</span>
               </button>
               <button
                 onClick={() => setActiveTab('branding')}
-                className={`px-6 py-4 font-semibold ${
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'branding'
-                    ? 'border-b-2 border-indigo-600 text-indigo-600'
-                    : 'text-gray-700 hover:text-indigo-600'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Branding
+                <span className="inline sm:hidden">🎨</span>
+                <span className="hidden sm:inline">Branding</span>
               </button>
             </div>
           </div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-3 sm:p-4 md:p-6 w-full overflow-hidden">
             {/* Users Tab */}
             {activeTab === 'users' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Gérer les Utilisateurs</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Gérer les Utilisateurs</h2>
                 {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Chargement...</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('common.loading')}</p>
                   </div>
                 ) : users.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Aucun utilisateur</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('admin.noUsers')}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full text-xs sm:text-sm">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nom</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">E-mail</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-                          <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Rejoint le</th>
-                          <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Actions</th>
+                          <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-left font-semibold text-gray-700">Nom</th>
+                          <th className="hidden sm:table-cell px-4 md:px-6 py-3 text-left font-semibold text-gray-700">E-mail</th>
+                          <th className="hidden md:table-cell px-6 py-3 text-left font-semibold text-gray-700">Role</th>
+                          <th className="hidden lg:table-cell px-6 py-3 text-left font-semibold text-gray-700">Rejoint le</th>
+                          <th className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-right font-semibold text-gray-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -673,10 +724,10 @@ export default function AdminPage() {
                             onClick={() => openUserModal(user)}
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
                           >
-                            <td className="px-6 py-4 text-sm text-gray-900">{user.name}</td>
-                            <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                            <td className="px-6 py-4 text-sm">
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-gray-900 font-medium">{user.name}</td>
+                            <td className="hidden sm:table-cell px-4 md:px-6 py-3 text-gray-600">{user.email}</td>
+                            <td className="hidden md:table-cell px-4 md:px-6 py-3 text-gray-600">
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 user.role === 'admin'
                                   ? 'bg-purple-100 text-purple-800'
                                   : 'bg-blue-100 text-blue-800'
@@ -684,18 +735,18 @@ export default function AdminPage() {
                                 {user.role}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-600">
+                            <td className="hidden lg:table-cell px-6 py-3 text-gray-600">
                               {new Date(user.createdAt).toLocaleDateString()}
                             </td>
-                            <td className="px-6 py-4 text-right">
+                            <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-3 text-right">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteUser(user._id);
                                 }}
-                                className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                                className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-semibold"
                               >
-                                Supprimer
+                                Sup.
                               </button>
                             </td>
                           </tr>
@@ -710,22 +761,22 @@ export default function AdminPage() {
             {/* Assessments Tab */}
             {activeTab === 'assessments' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Évaluations</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Évaluations</h2>
                 {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Chargement...</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('common.loading')}</p>
                   </div>
                 ) : assessments.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Aucune évaluation</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('admin.noAssessments')}</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:gap-4">
                     {assessments.map((assessment: any) => (
-                      <div key={assessment._id} className="border border-gray-200 rounded-lg p-4">
-                        <h3 className="font-semibold text-gray-900">{assessment.userName}</h3>
-                        <p className="text-sm text-gray-600">{assessment.userEmail}</p>
-                        <p className="text-sm text-gray-500 mt-2">
+                      <div key={assessment._id} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm">
+                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{assessment.userName}</h3>
+                        <p className="text-xs sm:text-sm text-gray-600">{assessment.userEmail}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-2">
                           {new Date(assessment.createdAt).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
@@ -738,37 +789,37 @@ export default function AdminPage() {
             {/* Content Tab */}
             {activeTab === 'content' && (
               <div>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">Contenu</h2>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Contenu</h2>
                   <button
                     onClick={() => openContentModal()}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
                   >
-                    + Ajouter du Contenu
+                    + Ajouter
                   </button>
                 </div>
                 {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Chargement...</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('common.loading')}</p>
                   </div>
                 ) : contents.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Aucun contenu</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('admin.noContent')}</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:gap-4">
                     {contents.map((content: any) => (
-                      <div key={content._id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-gray-900">{content.title}</h3>
-                            <p className="text-sm text-gray-600">{content.type} • {content.category}</p>
-                            <p className="text-sm text-gray-500 mt-2">{content.description}</p>
+                      <div key={content._id} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm">
+                        <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{content.title}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600">{content.type} • {content.category}</p>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-2 line-clamp-2">{content.description}</p>
                           </div>
-                          <div className="ml-4 flex gap-2">
+                          <div className="flex gap-2 flex-shrink-0">
                             <button
                               onClick={() => openContentModal(content)}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                              className="px-2 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm rounded transition-colors"
                             >
                               Modifier
                             </button>
@@ -776,7 +827,7 @@ export default function AdminPage() {
                               onClick={() => {
                                 handleDeleteContent(content._id);
                               }}
-                              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                              className="px-2 sm:px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm rounded transition-colors"
                             >
                               Supprimer
                             </button>
@@ -792,9 +843,9 @@ export default function AdminPage() {
             {/* Appointments Tab */}
             {activeTab === 'appointments' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Rendez-vous</h2>
-                <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">Gestion des rendez-vous</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{t('appointments.title')}</h2>
+                <div className="text-center py-8 sm:py-12">
+                  <p className="text-gray-600 mb-4 text-sm sm:text-base">{t('appointments.management')}</p>
                   <Link
                     href="/admin/appointments"
                     className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg"
@@ -808,25 +859,25 @@ export default function AdminPage() {
             {/* Consultation Requests Tab */}
             {activeTab === 'consultations' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Demandes de Consultation</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Demandes de Consultation</h2>
                 {loading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Chargement...</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('common.loading')}</p>
                   </div>
                 ) : consultationRequests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">Aucune demande de consultation</p>
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('admin.noConsultationRequests')}</p>
                   </div>
                 ) : (
-                  <div className="grid gap-4">
+                  <div className="grid gap-3 sm:gap-4">
                     {consultationRequests.map((request: any) => (
-                      <div key={request._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-3">
+                      <div key={request._id} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3 mb-3">
                           <div>
-                            <h3 className="font-semibold text-gray-900">{request.userName}</h3>
-                            <p className="text-sm text-gray-600">{request.userEmail}</p>
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{request.userName}</h3>
+                            <p className="text-xs sm:text-sm text-gray-600">{request.userEmail}</p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
                             request.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
                               : request.status === 'assigned'
@@ -836,15 +887,15 @@ export default function AdminPage() {
                             {request.status}
                           </span>
                         </div>
-                        <div className="space-y-2 text-sm text-gray-600">
+                        <div className="space-y-1 text-xs sm:text-sm text-gray-600">
                           <p><strong>Type:</strong> {request.consultationType}</p>
                           <p><strong>Urgence:</strong> {request.urgency}</p>
-                          <p><strong>Objectifs:</strong> {request.goals}</p>
+                          <p className="line-clamp-1"><strong>Objectifs:</strong> {request.goals}</p>
                           {request.assignedSpecialistName && (
-                            <p><strong>Spécialiste assigné:</strong> {request.assignedSpecialistName}</p>
+                            <p><strong>Spécialiste:</strong> {request.assignedSpecialistName}</p>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-3">
+                        <p className="text-xs text-gray-500 mt-2">
                           {new Date(request.createdAt).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
@@ -860,53 +911,54 @@ export default function AdminPage() {
             )}
           </div>
         </div>
+      </div>
       </main>
 
       {/* User Details Modal */}
       {showUserModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full h-[calc(100vh-2rem)] flex flex-col">
-            <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center flex-shrink-0">
-              <h3 className="text-2xl font-bold text-gray-900">Détails Complets de l'Utilisateur</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-3xl w-full max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col my-4 sm:my-0">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-shrink-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">Détails Utilisateur</h3>
               <button
                 onClick={() => setShowUserModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold ml-4 flex-shrink-0"
               >
                 ×
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1 p-6 space-y-6">
+            <div className="overflow-y-auto flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
               {/* Basic User Info */}
               <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 pb-2 border-b border-gray-200">
                   Informations de Base
                 </h4>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom Complet</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Nom Complet</label>
                     {isEditingUser ? (
                       <input
                         type="text"
                         value={editingUserData?.name || ''}
                         onChange={(e) => setEditingUserData({ ...editingUserData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     ) : (
-                      <p className="text-gray-900 font-semibold">{selectedUser.name}</p>
+                      <p className="text-gray-900 font-semibold text-sm break-all">{selectedUser.name}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">E-mail</label>
                     {isEditingUser ? (
                       <input
                         type="email"
                         value={editingUserData?.email || ''}
                         onChange={(e) => setEditingUserData({ ...editingUserData, email: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     ) : (
-                      <p className="text-gray-900 font-semibold break-all">{selectedUser.email}</p>
+                      <p className="text-gray-900 font-semibold text-sm break-all">{selectedUser.email}</p>
                     )}
                   </div>
                   <div>
@@ -972,21 +1024,51 @@ export default function AdminPage() {
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                   Statut d'Évaluation
                 </h4>
-                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="text-sm text-gray-700 flex-1">Évaluation Complétée:</span>
-                  {isEditingUser ? (
-                    <select
-                      value={editingUserData?.hasCompletedAssessment ? 'true' : 'false'}
-                      onChange={(e) => setEditingUserData({ ...editingUserData, hasCompletedAssessment: e.target.value === 'true' })}
-                      className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      <option value="false">Non</option>
-                      <option value="true">Oui</option>
-                    </select>
-                  ) : (
-                    <span className={`font-semibold ${selectedUser.hasCompletedAssessment ? 'text-green-600' : 'text-gray-500'}`}>
-                      {selectedUser.hasCompletedAssessment ? '✓ Oui' : '✗ Non'}
-                    </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700 flex-1">Évaluation Complétée:</span>
+                    {isEditingUser ? (
+                      <select
+                        value={editingUserData?.hasCompletedAssessment ? 'true' : 'false'}
+                        onChange={(e) => setEditingUserData({ ...editingUserData, hasCompletedAssessment: e.target.value === 'true' })}
+                        className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                      >
+                        <option value="false">Non</option>
+                        <option value="true">Oui</option>
+                      </select>
+                    ) : (
+                      <span className={`font-semibold ${selectedUser.hasCompletedAssessment ? 'text-green-600' : 'text-gray-500'}`}>
+                        {selectedUser.hasCompletedAssessment ? '✓ Oui' : '✗ Non'}
+                      </span>
+                    )}
+                  </div>
+                  {selectedUser.assessment?.createdAt && (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Date Évaluation</label>
+                      <p className="text-gray-900 font-semibold text-sm">
+                        {new Date(selectedUser.assessment.createdAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                  )}
+                  {selectedUser.assessment?.updatedAt && (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Dernière Mise à Jour Évaluation</label>
+                      <p className="text-gray-900 font-semibold text-sm">
+                        {new Date(selectedUser.assessment.updatedAt).toLocaleDateString('fr-FR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -995,8 +1077,21 @@ export default function AdminPage() {
               {(selectedUser.assessment && Object.keys(selectedUser.assessment).length > 0 || isEditingUser) && (
                 <div className="border-t border-gray-200 pt-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                    Données d'Évaluation
+                    Données d'Évaluation Complètes
                   </h4>
+                  
+                  {/* Assessment Summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <label className="text-xs font-medium text-blue-700">ID Évaluation</label>
+                      <p className="text-blue-900 font-mono text-xs break-all">{selectedUser.assessment?._id || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                      <label className="text-xs font-medium text-green-700">Statut Enregistrement</label>
+                      <p className="text-green-900 font-semibold">✓ Enregistré</p>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     {/* Full Name */}
                     <div className="p-3 bg-gray-50 rounded-lg">
@@ -1729,6 +1824,61 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* Assessment Metadata Section */}
+              {selectedUser.assessment && (
+                <div className="border-t border-gray-200 pt-6">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                    Métadonnées d'Évaluation
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Nom Complet (Évaluation)</label>
+                      <p className="text-gray-900 font-semibold">{selectedUser.assessment.fullName || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">E-mail (Évaluation)</label>
+                      <p className="text-gray-900 font-semibold break-all">{selectedUser.assessment.userEmail || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">ID Utilisateur (Évaluation)</label>
+                      <p className="text-gray-900 font-mono text-xs break-all">{selectedUser.assessment.userId || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Nom Utilisateur (Évaluation)</label>
+                      <p className="text-gray-900 font-semibold">{selectedUser.assessment.userName || '-'}</p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Date de Création Évaluation</label>
+                      <p className="text-gray-900 font-semibold text-xs">
+                        {selectedUser.assessment.createdAt 
+                          ? new Date(selectedUser.assessment.createdAt).toLocaleDateString('fr-FR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Date Dernière Mise à Jour</label>
+                      <p className="text-gray-900 font-semibold text-xs">
+                        {selectedUser.assessment.updatedAt 
+                          ? new Date(selectedUser.assessment.updatedAt).toLocaleDateString('fr-FR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
 
             {/* Actions Footer - Sticky */}
@@ -1780,37 +1930,37 @@ export default function AdminPage() {
 
       {/* Content Modal */}
       {showContentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full">
-            <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {isEditingContent ? 'Modifier le Contenu' : 'Ajouter un Nouveau Contenu'}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col my-4 sm:my-0">
+            <div className="border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-shrink-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+                {isEditingContent ? 'Modifier Contenu' : 'Ajouter Contenu'}
               </h3>
               <button
                 onClick={closeContentModal}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-2xl ml-4 flex-shrink-0"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-6 space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+            <div className="p-3 sm:p-6 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Titre *</label>
                 <input
                   type="text"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                   value={newContent.title}
                   onChange={(e) => setNewContent({ ...newContent, title: e.target.value })}
                   placeholder="Titre du contenu"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Type *</label>
                   <select
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     value={newContent.type}
                     onChange={(e) => setNewContent({ ...newContent, type: e.target.value as any })}
                   >

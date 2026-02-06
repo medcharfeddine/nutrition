@@ -10,7 +10,7 @@ const assessmentSchema = z.object({
   dateOfBirth: z.string(),
   gender: z.string().min(1, 'Le sexe est requis'),
   region: z.string().min(1, 'La région est requise'),
-  phoneNumber: z.string().optional(),
+  phoneNumber: z.string().min(1, 'Le numéro de téléphone est requis'),
   height: z.string().min(1, 'La taille est requise'),
   weight: z.string().min(1, 'Le poids est requis'),
   physicalActivityLevel: z.string().min(1, 'Le niveau d\'activité est requis'),
@@ -19,10 +19,10 @@ const assessmentSchema = z.object({
   sleepHours: z.string().min(1, 'Veuillez repondre'),
   mealsPerDay: z.string().min(1, 'Veuillez repondre'),
   chronicDiseases: z.array(z.string()).optional(),
-  medicalTreatment: z.string().min(1, 'Veuillez repondre'),
+  medicalTreatment: z.string().optional(),
   allergiesIntolerances: z.array(z.string()).optional(),
   otherAllergies: z.string().optional(),
-  mainObjective: z.string().min(1, 'Veuillez selectionner un objectif'),
+  mainObjective: z.string().optional(),
   otherObjective: z.string().optional(),
 });
 

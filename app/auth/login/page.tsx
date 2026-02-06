@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -13,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [branding, setBranding] = useState<any>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchBranding();
@@ -43,46 +46,52 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('E-mail ou mot de passe invalide');
+        setError(t('auth.loginError'));
       } else if (result?.ok) {
         router.push('/assessment');
       }
     } catch (err) {
-      setError('Une erreur s\'est produite. Veuillez reessayer.');
+      setError(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <div className="text-center mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-3 sm:px-4 py-8 sm:py-0 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+      
+      <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md">
+        <div className="text-center mb-6 sm:mb-8">
           {branding?.logoUrl ? (
             <Image 
               src={branding.logoUrl} 
               alt={branding.siteName || 'NutriEd'} 
-              width={80}
-              height={80}
-              className="h-20 w-auto mx-auto mb-4"
+              width={200}
+              height={200}
+              className="h-16 sm:h-20 w-auto mx-auto mb-4 object-contain"
               priority
+              quality={95}
             />
           ) : (
-            <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
           )}
-          <p className="text-gray-600">Education Nutritionnelle Personnalisee</p>
+          <p className="text-gray-600 text-sm sm:text-base">{t('common.appDescription')}</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-6">
+            <p className="text-red-600 text-xs sm:text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Adresse E-mail
+              {t('common.email')}
             </label>
             <input
               type="email"
@@ -96,7 +105,7 @@ export default function LoginPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mot de passe
+              {t('common.password')}
             </label>
             <input
               type="password"
@@ -113,19 +122,19 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-2 rounded-lg transition duration-200"
           >
-            {loading ? 'Connexion en cours...' : 'Connexion'}
+            {loading ? t('common.loading') : t('common.signIn')}
           </button>
         </form>
 
         <p className="text-center text-gray-600 text-sm mt-6">
-          Vous n'avez pas de compte?{' '}
+          {t('auth.noAccount')}{' '}
           <Link href="/auth/register" className="text-indigo-600 hover:underline font-semibold">
-            S'inscrire
+            {t('common.signUp')}
           </Link>
         </p>
 
         <p className="text-center text-gray-600 text-sm mt-4">
-          Admin de Démonstration: admin@nutrition.com / password123
+          {t('auth.demoAdmin')}
         </p>
       </div>
     </div>

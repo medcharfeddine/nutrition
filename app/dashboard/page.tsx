@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface UserProfile {
   age?: number;
@@ -29,6 +31,7 @@ interface User {
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextStepsCompleted, setNextStepsCompleted] = useState<{[key: number]: boolean}>({
@@ -64,7 +67,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -82,50 +85,51 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-indigo-600"><a href="/">NutriÉd</a></h1>
-              <div className="hidden md:flex gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
+              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600"><a href="/">NutriÉd</a></h1>
+              <div className="hidden md:flex gap-4 md:gap-6">
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Tableau de Bord
+                  {t('common.dashboard')}
                 </Link>
                 <Link
                   href="/messages"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
                   Messages
                 </Link>
                 <Link
                   href="/consultation-request"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Consultation
+                  {t('common.dashboard')}
                 </Link>
                 <Link
                   href="/appointments"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Rendez-vous
+                  {t('common.appointments')}
                 </Link>
                 <Link
                   href="/profile"
-                  className="text-gray-700 hover:text-indigo-600 font-medium"
+                  className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Profil
+                  {t('common.profile')}
                 </Link>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{session.user?.name}</span>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSwitcher />
+              <span className="text-xs sm:text-sm text-gray-600">{session.user?.name}</span>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium"
               >
-                Déconnexion
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -133,30 +137,30 @@ export default function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12">
         {session.user?.role === 'admin' && (
           <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-blue-900 font-semibold">Accès Administrateur</p>
+            <p className="text-blue-900 font-semibold">{t('dashboard.adminAccess')}</p>
             <p className="text-blue-700 text-sm mt-1">
               <Link href="/admin" className="underline hover:no-underline">
-                Aller au Tableau de Bord Admin
+                {t('dashboard.goToAdminDashboard')}
               </Link>
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {/* Welcome Card */}
-          <div className="md:col-span-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-8 text-white">
-            <h2 className="text-3xl font-bold mb-2">Bienvenue, {session.user?.name}!</h2>
-            <p className="text-indigo-100">
-              Commencez votre parcours d'éducation nutritionnelle personnalisée aujourd'hui
+          <div className="md:col-span-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 sm:p-8 text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{t('dashboard.welcome')}, {session.user?.name}!</h2>
+            <p className="text-sm sm:text-base text-indigo-100">
+              {t('dashboard.welcomeMessage')}
             </p>
           </div>
 
           {/* Assessment Status */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Évaluation Nutritionnelle</h3>
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t('dashboard.assessment')}</h3>
             {session?.user?.hasCompletedAssessment ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -166,104 +170,104 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-green-900">Complétée</p>
-                    <p className="text-xs text-green-600">Votre évaluation nutritionnelle est complète</p>
+                    <p className="text-xs sm:text-sm font-semibold text-green-900">{t('dashboard.assessmentComplete')}</p>
+                    <p className="text-xs text-green-600">{t('dashboard.assessmentCompleteMessage')}</p>
                   </div>
                 </div>
               </div>
             ) : (
               <div>
-                <p className="text-gray-600 text-sm mb-4">Complétez l'évaluation nutritionnelle pour un profil personnalisé</p>
+                <p className="text-gray-600 text-xs sm:text-sm mb-4">{t('dashboard.completeAssessment')}</p>
                 <Link
                   href="/assessment"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold"
                 >
-                  Faire l'Évaluation
+                  {t('dashboard.doAssessment')}
                 </Link>
               </div>
             )}
           </div>
 
           {/* Profile Status */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Etat du Profil</h3>
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t('dashboard.profileStatus')}</h3>
             {user?.profile?.age ? (
               <div className="space-y-3">
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Age:</span> {user.profile.age}
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-semibold">{t('dashboard.age')}:</span> {user.profile.age}
                 </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Sexe:</span> {user.profile.gender || 'Non defini'}
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-semibold">{t('dashboard.sex')}:</span> {user.profile.gender || t('dashboard.notDefined')}
                 </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Mode de vie:</span>{' '}
-                  {user.profile.lifestyle || 'Non defini'}
+                <p className="text-xs sm:text-sm text-gray-600">
+                  <span className="font-semibold">{t('dashboard.lifestyle')}:</span>{' '}
+                  {user.profile.lifestyle || t('dashboard.notDefined')}
                 </p>
                 <Link
                   href="/profile"
-                  className="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-semibold text-sm"
+                  className="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-semibold text-xs sm:text-sm"
                 >
-                  Mettre a jour le Profil →
+                  {t('dashboard.updateProfile')} →
                 </Link>
               </div>
             ) : (
               <div>
-                <p className="text-gray-600 text-sm mb-4">Completez votre profil nutritionnel pour commencer</p>
+                <p className="text-gray-600 text-xs sm:text-sm mb-4">{t('dashboard.completeProfile')}</p>
                 <Link
                   href="/profile"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold"
                 >
-                  Completer le Profil
+                  {t('dashboard.completeProfileBtn')}
                 </Link>
               </div>
             )}
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Vos Objectifs</h3>
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t('dashboard.yourGoals')}</h3>
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">Calories:</span>{' '}
-                {user?.profile?.calorieGoal || 'Non defini'} kcal
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-semibold">{t('dashboard.calories')}:</span>{' '}
+                {user?.profile?.calorieGoal || t('dashboard.notDefined')} {t('dashboard.kcal')}
               </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">Proteines:</span>{' '}
-                {user?.profile?.proteinGoal || 'Non defini'}g
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-semibold">{t('dashboard.proteins')}:</span>{' '}
+                {user?.profile?.proteinGoal || t('dashboard.notDefined')}g
               </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">Glucides:</span> {user?.profile?.carbGoal || 'Non defini'}g
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-semibold">{t('dashboard.carbs')}:</span> {user?.profile?.carbGoal || t('dashboard.notDefined')}g
               </p>
-              <p className="text-sm text-gray-600">
-                <span className="font-semibold">Graisses:</span> {user?.profile?.fatGoal || 'Non defini'}g
+              <p className="text-xs sm:text-sm text-gray-600">
+                <span className="font-semibold">{t('dashboard.fats')}:</span> {user?.profile?.fatGoal || t('dashboard.notDefined')}g
               </p>
             </div>
           </div>
 
           {/* Resources */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ressources Educatives</h3>
-            <p className="text-gray-600 text-sm mb-4">
-              Accedez au contenu nutritionnel cree par des experts
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t('dashboard.educationalResources')}</h3>
+            <p className="text-gray-600 text-xs sm:text-sm mb-4">
+              {t('dashboard.accessContent')}
             </p>
             <button
               onClick={() => router.push('/resources')}
-              className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+              className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold"
             >
-              Parcourir les Ressources
+              {t('dashboard.browseResources')}
             </button>
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Prochaines Etapes</h3>
-          <ul className="space-y-3">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">{t('dashboard.nextSteps')}</h3>
+          <ul className="space-y-3 text-xs sm:text-sm">
             {[
-              { label: 'Terminer l\'evaluation nutritionnelle', completed: session?.user?.hasCompletedAssessment || false },
-              { label: 'Definir les objectifs alimentaires', completed: nextStepsCompleted[1] },
-              { label: 'Obtenir un plan de repas personnalise', completed: nextStepsCompleted[2] },
-              { label: 'Suivre votre progression', completed: nextStepsCompleted[3] },
+              { label: t('dashboard.completeEvaluation'), completed: session?.user?.hasCompletedAssessment || false },
+              { label: t('dashboard.setGoals'), completed: nextStepsCompleted[1] },
+              { label: t('dashboard.getMealPlan'), completed: nextStepsCompleted[2] },
+              { label: t('dashboard.trackProgress'), completed: nextStepsCompleted[3] },
             ]
               .filter((step) => !step.completed || nextStepsCompleted[Object.keys(nextStepsCompleted).find(k => nextStepsCompleted[parseInt(k)] === step.completed) as any])
               .map((step, index) => (
@@ -273,10 +277,10 @@ export default function DashboardPage() {
                     checked={step.completed}
                     onChange={(e) => {
                       const stepIndex = [
-                        { label: 'Terminer l\'evaluation nutritionnelle', completed: session?.user?.hasCompletedAssessment || false },
-                        { label: 'Definir les objectifs alimentaires', completed: nextStepsCompleted[1] },
-                        { label: 'Obtenir un plan de repas personnalise', completed: nextStepsCompleted[2] },
-                        { label: 'Suivre votre progression', completed: nextStepsCompleted[3] },
+                        { label: t('dashboard.completeEvaluation'), completed: session?.user?.hasCompletedAssessment || false },
+                        { label: t('dashboard.setGoals'), completed: nextStepsCompleted[1] },
+                        { label: t('dashboard.getMealPlan'), completed: nextStepsCompleted[2] },
+                        { label: t('dashboard.trackProgress'), completed: nextStepsCompleted[3] },
                       ].findIndex(s => s.label === step.label);
                       if (stepIndex > 0) {
                         setNextStepsCompleted((prev) => ({
@@ -285,14 +289,14 @@ export default function DashboardPage() {
                         }));
                       }
                     }}
-                    disabled={step.label === 'Terminer l\'evaluation nutritionnelle'}
+                    disabled={step.label === t('dashboard.completeEvaluation')}
                     className="w-5 h-5 text-indigo-600 rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <span className={`text-gray-700 ${step.completed ? 'line-through text-gray-400' : ''}`}>{step.label}</span>
                 </li>
               ))}
             {session?.user?.hasCompletedAssessment && (
-              <li className="text-sm text-green-600 font-semibold">✓ Évaluation nutritionnelle complétée!</li>
+              <li className="text-sm text-green-600 font-semibold">✓ {t('dashboard.evaluationCompleted')}</li>
             )}
           </ul>
         </div>

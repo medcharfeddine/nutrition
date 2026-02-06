@@ -53,8 +53,12 @@ const authConfig = {
   ],
   pages: {
     signIn: '/auth/login',
+    signOut: '/auth/login',
   },
   callbacks: {
+    async signOut({ token }: any) {
+      return true;
+    },
     async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role;
@@ -64,7 +68,7 @@ const authConfig = {
       return token;
     },
     async session({ session, token }: any) {
-      if (session.user) {
+      if (session?.user) {
         session.user.role = token.role as 'user' | 'admin';
         session.user.id = token.id as string;
         session.user.hasCompletedAssessment = token.hasCompletedAssessment as boolean;
@@ -73,7 +77,13 @@ const authConfig = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  basePath: '/api/auth',
   trustHost: true,
 };
+
+// Ensure NEXTAUTH_URL is set for production
+if (!process.env.NEXTAUTH_URL && process.env.VERCEL_URL) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_URL}`;
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1); // 1 for basic info, 2+ for assessment
@@ -17,6 +19,7 @@ export default function RegisterPage() {
   const [userId, setUserId] = useState('');
   const [branding, setBranding] = useState<any>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchBranding();
@@ -61,7 +64,7 @@ export default function RegisterPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.passwordMismatch'));
       return;
     }
 
@@ -88,7 +91,7 @@ export default function RegisterPage() {
         setCurrentStep(2);
       }
     } catch (err) {
-      setError('Une erreur s\'est produite. Veuillez reessayer.');
+      setError(t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -165,28 +168,29 @@ export default function RegisterPage() {
   // Step 1: Basic Account Registration
   if (currentStep === 1) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-          <div className="text-center mb-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-3 sm:px-4 py-8 sm:py-0">
+        <div className="bg-white rounded-lg shadow-xl p-6 sm:p-8 w-full max-w-md">
+          <div className="text-center mb-6 sm:mb-8">
             {branding?.logoUrl ? (
               <Image 
                 src={branding.logoUrl} 
                 alt={branding.siteName || 'NutriEd'} 
-                width={80}
-                height={80}
-                className="h-20 w-auto mx-auto mb-4"
+                width={200}
+                height={200}
+                className="h-16 sm:h-20 w-auto mx-auto mb-3 sm:mb-4 object-contain"
                 priority
+                quality={95}
               />
             ) : (
-              <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
             )}
-            <p className="text-gray-600">Créez Votre Compte</p>
-            <p className="text-gray-500 text-sm mt-2">Étape 1 sur 2</p>
+            <p className="text-gray-600 text-sm sm:text-base">Créez Votre Compte</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2">Étape 1 sur 2</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-6">
+              <p className="text-red-600 text-xs sm:text-sm">{error}</p>
             </div>
           )}
 
@@ -270,6 +274,11 @@ export default function RegisterPage() {
   // Steps 2-7: Assessment Form
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

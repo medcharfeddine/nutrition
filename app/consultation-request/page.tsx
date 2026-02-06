@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function ConsultationRequestPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('request');
   const [consultationType, setConsultationType] = useState<'initial' | 'follow-up' | 'specific-concern'>('initial');
   const [goals, setGoals] = useState('');
@@ -74,17 +77,17 @@ export default function ConsultationRequestPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage('✅ Your consultation request has been submitted! An admin will review it soon.');
+        setMessage(t('consultation.requestSubmitted'));
         setGoals('');
         setNotes('');
         setConsultationType('initial');
         setUrgency('medium');
         fetchRequests();
       } else {
-        setError(data.error || 'Failed to submit request');
+        setError(data.error || t('consultation.failedToSubmit'));
       }
     } catch (error) {
-      setError('An error occurred. Please try again.');
+      setError(t('common.errorOccurred'));
       console.error('Failed to submit request:', error);
     } finally {
       setLoading(false);
@@ -100,7 +103,7 @@ export default function ConsultationRequestPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -114,21 +117,22 @@ export default function ConsultationRequestPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
               <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
                 {branding?.logoUrl ? (
                   <Image 
                     src={branding.logoUrl} 
                     alt={branding.siteName || 'NutriEd'} 
-                    width={40}
-                    height={40}
-                    className="h-10 w-auto"
+                    width={100}
+                    height={100}
+                    className="h-8 sm:h-10 w-auto object-contain"
                     priority
+                    quality={95}
                   />
                 ) : (
-                  <h1 className="text-2xl font-bold text-indigo-600">NutriEd</h1>
+                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriEd</h1>
                 )}
               </Link>
               <div className="hidden md:flex gap-6">
@@ -150,12 +154,13 @@ export default function ConsultationRequestPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <LanguageSwitcher />
               <span className="text-sm text-gray-600">{session.user?.name}</span>
               <button
                 onClick={handleSignOut}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
               >
-                Deconnexion
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -357,7 +362,7 @@ export default function ConsultationRequestPage() {
                               <strong>Spécialiste Assigné:</strong> {request.assignedSpecialistName}
                             </p>
                             <p className="text-sm text-indigo-700 mt-2">
-                              Vous pouvez maintenant prendre rendez-vous avec votre spécialiste via la section Messages.
+                              {t('appointments.appointmentNowAvailable')}
                             </p>
                           </div>
                         )}

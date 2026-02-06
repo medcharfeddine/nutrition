@@ -4,10 +4,13 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function MessagesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [messageContent, setMessageContent] = useState('');
@@ -105,7 +108,7 @@ export default function MessagesPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Chargement...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -119,10 +122,10 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-8">
-              <h1 className="text-2xl font-bold text-indigo-600">NutriÉd</h1>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
+              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Messages</h1>
               <div className="hidden md:flex gap-6">
                 <Link
                   href="/dashboard"
@@ -157,12 +160,13 @@ export default function MessagesPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <LanguageSwitcher />
               <span className="text-sm text-gray-600">{session.user?.name}</span>
               <button
                 onClick={handleSignOut}
                 className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
               >
-                Déconnexion
+                {t('common.logout')}
               </button>
             </div>
           </div>
@@ -182,7 +186,7 @@ export default function MessagesPage() {
           <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-gray-50">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-40 text-gray-500">
-                <p>Aucun message pour le moment. Commencez une conversation!</p>
+                <p>{t('messages.noMessages')}</p>
               </div>
             ) : (
               messages.map((message: any, index: number) => (

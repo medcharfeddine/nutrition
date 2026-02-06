@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useLanguage } from '@/lib/language-provider';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function AssessmentPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { t } = useLanguage();
   const [currentSection, setCurrentSection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +58,7 @@ export default function AssessmentPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <p className="text-gray-600 text-lg">Chargement...</p>
+        <p className="text-gray-600 text-lg">{t('common.loading')}</p>
       </div>
     );
   }
@@ -114,7 +117,12 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-12 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+      
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

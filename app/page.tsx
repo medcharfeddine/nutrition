@@ -5,10 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/lib/language-provider';
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t } = useLanguage();
   const [branding, setBranding] = useState<any>(null);
 
   useEffect(() => {
@@ -34,36 +37,38 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
       <nav className="bg-white bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition">
               {branding?.logoUrl ? (
                 <Image 
                   src={branding.logoUrl} 
                   alt={branding.siteName || 'NutriEd'} 
-                  width={40}
-                  height={40}
-                  className="h-10 w-auto"
+                  width={100}
+                  height={100}
+                  className="h-8 sm:h-10 w-auto object-contain"
                   priority
+                  quality={95}
                 />
               ) : (
-                <h1 className="text-2xl font-bold text-indigo-600 drop-shadow-lg">NutriEd</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-indigo-600 drop-shadow-lg">{t('common.appName')}</h1>
               )}
             </Link>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4 items-center">
+              <LanguageSwitcher />
               {status === 'unauthenticated' && (
                 <>
                   <Link
                     href="/auth/login"
-                    className="text-gray-700 hover:text-gray-900 font-semibold"
+                    className="text-gray-700 hover:text-gray-900 font-semibold text-sm sm:text-base"
                   >
-                    Connexion
+                    {t('common.signIn')}
                   </Link>
                   <Link
                     href="/auth/register"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold transition text-sm sm:text-base"
                   >
-                    Démarrer
+                    {t('common.signUp')}
                   </Link>
                 </>
               )}
@@ -73,97 +78,32 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h2 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-          Votre Parcours vers une Meilleure <span className="text-yellow-400">Nutrition</span> Commence Ici
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 md:py-20 text-center">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
+          {t('common.appDescription')}
         </h2>
-        <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
-          Education nutritionnelle personnalisee adaptee a votre mode de vie, vos objectifs et vos preferences. 
-          Obtenez des conseils d'experts, des plans de repas et un suivi de la progression, tout en un seul endroit.
+        <p className="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 max-w-3xl mx-auto">
+          {t('common.appDescription')}
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <Link
             href="/auth/register"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition transform hover:scale-105"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition transform hover:scale-105"
           >
-            Essai Gratuit
+            {t('common.signUp')}
           </Link>
           <Link
             href="/auth/login"
-            className="border-2 border-indigo-600 text-indigo-400 hover:bg-indigo-600 hover:text-white px-8 py-4 rounded-lg font-bold text-lg transition"
+            className="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg transition"
           >
-            Connexion
+            {t('common.signIn')}
           </Link>
         </div>
       </div>
 
-      {/* Features */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h3 className="text-3xl font-bold text-gray-900 text-center mb-12">Pourquoi Choisir NutriEd?</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
-            <div className="text-4xl mb-4">🎯</div>
-            <h4 className="text-xl font-bold mb-3">Plans Personnalises</h4>
-            <p className="text-gray-600">
-              Obtenez des plans nutritionnels adaptes a votre age, votre mode de vie, vos objectifs et vos preferences alimentaires.
-            </p>
-          </div>
-
-          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
-            <div className="text-4xl mb-4">📊</div>
-            <h4 className="text-xl font-bold mb-3">Suivre la Progression</h4>
-            <p className="text-gray-600">
-              Surveillez votre consommation nutritionnelle, votre perte de poids et vos metriques de sante avec des analyses detaillees.
-            </p>
-          </div>
-
-          <div className="bg-white hover:bg-gray-100 rounded-lg p-8 text-gray-900 transition border border-gray-200">
-            <div className="text-4xl mb-4">📚</div>
-            <h4 className="text-xl font-bold mb-3">Contenu Expert</h4>
-            <p className="text-gray-600">
-              Apprenez des nutritionnistes et des experts en sante par le biais de videos, d'articles et d'infographies.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="bg-white border-t border-gray-200 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center text-gray-900">
-            <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-600">10K+</div>
-              <p className="text-gray-600">Utilisateurs Actifs</p>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-600">500+</div>
-              <p className="text-gray-600">Plans de Repas</p>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2 text-indigo-600">95%</div>
-              <p className="text-gray-600">Taux de Satisfaction</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <h3 className="text-3xl font-bold text-gray-900 mb-6">Pret a Transformer votre Nutrition?</h3>
-        <p className="text-xl text-gray-700 mb-8">
-          Rejoignez des milliers de personnes qui ont ameliore leur sante avec NutriEd
-        </p>
-        <Link
-          href="/auth/register"
-          className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition transform hover:scale-105"
-        >
-          Commencez Maintenant - C'est Gratuit
-        </Link>
-      </div>
-
       {/* Footer */}
-      <footer className="bg-white text-gray-600 py-8 text-center border-t border-gray-200">
-        <p>&copy; 2026 NutriÉd. Tous droits réservés. | Construit avec Next.js, MongoDB & IA</p>
+      <footer className="bg-white text-gray-600 py-8 text-center border-t border-gray-200 mt-12">
+        <p>&copy; 2026 {t('common.appName')}. {t('common.appDescription')}</p>
       </footer>
     </div>
   );

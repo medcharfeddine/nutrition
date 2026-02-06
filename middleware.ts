@@ -11,9 +11,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if it's a protected route
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
@@ -22,17 +20,20 @@ export async function middleware(request: NextRequest) {
 
   // Redirect unauthenticated users to login
   if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
+    const loginUrl = new URL('/auth/login', request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Redirect to dashboard if already authenticated and trying to access auth routes
   if (isAuthRoute && session) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const dashboardUrl = new URL('/dashboard', request.url);
+    return NextResponse.redirect(dashboardUrl);
   }
 
   // Check admin authorization
   if (isAdminRoute && session?.user?.role !== 'admin') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const dashboardUrl = new URL('/dashboard', request.url);
+    return NextResponse.redirect(dashboardUrl);
   }
 
   return NextResponse.next();
