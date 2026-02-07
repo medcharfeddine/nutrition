@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
@@ -234,12 +234,301 @@ function BrandingTab() {
   );
 }
 
+// Messages Tab Component
+function MessagesTab({ t }: { t: any }) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [reply, setReply] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const [lastFetch, setLastFetch] = useState(Date.now());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedConversation?.messages]);
+
+  // Fetch messages with polling
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch('/api/messages');
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+        setLastFetch(Date.now());
+      }
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mark messages as read when conversation is selected
+  const markConversationAsRead = useCallback(async (conversationId: string) => {
+    try {
+      await fetch('/api/messages', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId, markAsRead: true }),
+      });
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  // Auto-refresh every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update selected conversation when messages change
+  useEffect(() => {
+    if (selectedConversation) {
+      const updatedConv = groupedMessages[selectedConversation.conversationId];
+      if (updatedConv && updatedConv.messages.length !== selectedConversation.messages.length) {
+        setSelectedConversation(updatedConv);
+      }
+    }
+  }, [messages]);
+
+  // Handle conversation selection with read marking
+  const handleSelectConversation = useCallback((conv: any) => {
+    setSelectedConversation(conv);
+    if (conv.unreadCount > 0) {
+      markConversationAsRead(conv.conversationId);
+    }
+  }, [markConversationAsRead]);
+
+  // Memoized grouping of messages
+  const groupedMessages = messages.reduce((acc: any, msg: any) => {
+    const key = msg.conversationId;
+    if (!acc[key]) {
+      acc[key] = { messages: [] };
+    }
+    acc[key].messages.push(msg);
+    return acc;
+  }, {});
+
+  const conversations = Object.entries(groupedMessages)
+    .map(([convId, data]: any) => {
+      const msgs = data.messages;
+      const lastMsg = msgs[msgs.length - 1];
+      const unreadCount = msgs.filter(
+        (m: any) => !m.isRead && m.recipientId !== m.senderId
+      ).length;
+      return {
+        conversationId: convId,
+        senderName: lastMsg.senderName,
+        senderEmail: lastMsg.senderEmail,
+        lastMessage: lastMsg.content,
+        lastMessageTime: lastMsg.createdAt,
+        unreadCount,
+        messages: msgs,
+      };
+    })
+    .sort((a: any, b: any) => 
+      new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+    );
+
+  const handleSendReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reply.trim() || !selectedConversation) return;
+
+    setReplySending(true);
+    const tempReply = reply;
+    
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientId: selectedConversation.messages[0].senderId,
+          content: tempReply,
+        }),
+      });
+
+      if (res.ok) {
+        setReply('');
+        // Optimistic update
+        await fetchMessages();
+      }
+    } catch (error) {
+      console.error('Failed to send reply:', error);
+    } finally {
+      setReplySending(false);
+    }
+  };
+
+  const totalUnread = conversations.reduce((sum: number, conv: any) => sum + conv.unreadCount, 0);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Conversations List */}
+      <div className="md:col-span-1 border border-gray-200 rounded-lg bg-white overflow-hidden flex flex-col">
+        <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-blue-600 p-4 z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-white">Conversations</h3>
+              <p className="text-xs text-indigo-100">
+                {conversations.length} • {totalUnread} non lus
+              </p>
+            </div>
+            <button
+              onClick={fetchMessages}
+              disabled={loading}
+              className="text-white hover:text-indigo-100 disabled:opacity-50 transition"
+              title="Actualiser"
+            >
+              🔄
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto divide-y">
+          {loading ? (
+            <div className="p-4 text-center text-gray-500 text-sm">Chargement...</div>
+          ) : conversations.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 text-sm">Aucun message</div>
+          ) : (
+            conversations.map((conv: any) => (
+              <button
+                key={conv.conversationId}
+                onClick={() => handleSelectConversation(conv)}
+                className={`w-full text-left p-3 hover:bg-gray-50 transition border-l-4 ${
+                  selectedConversation?.conversationId === conv.conversationId
+                    ? 'border-indigo-600 bg-indigo-50'
+                    : conv.unreadCount > 0
+                    ? 'border-yellow-400 bg-yellow-50'
+                    : 'border-transparent'
+                }`}
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm truncate ${conv.unreadCount > 0 ? 'font-bold text-gray-900' : 'font-semibold text-gray-900'}`}>
+                      {conv.senderName}
+                    </p>
+                    <p className="text-xs text-gray-600 truncate">{conv.senderEmail}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1">{conv.lastMessage}</p>
+                  </div>
+                  {conv.unreadCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
+                      {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(conv.lastMessageTime).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Messages Display */}
+      <div className="md:col-span-2 border border-gray-200 rounded-lg bg-white overflow-hidden flex flex-col">
+        {selectedConversation ? (
+          <>
+            {/* Conversation Header */}
+            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-4">
+              <h3 className="font-bold text-white">{selectedConversation.senderName}</h3>
+              <p className="text-sm text-indigo-100">{selectedConversation.senderEmail}</p>
+              <p className="text-xs text-indigo-200 mt-1">
+                {selectedConversation.messages.length} messages
+              </p>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+              {selectedConversation.messages.map((msg: any, idx: number) => (
+                <div
+                  key={`${msg._id}-${idx}`}
+                  className={`flex ${msg.senderRole === 'admin' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs px-4 py-3 rounded-lg shadow-sm ${
+                      msg.senderRole === 'admin'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-white border border-gray-200 text-gray-900'
+                    }`}
+                  >
+                    <p className="text-xs font-semibold mb-1 opacity-75">{msg.senderName}</p>
+                    <p className="text-sm break-words">{msg.content}</p>
+                    <p
+                      className={`text-xs mt-2 ${
+                        msg.senderRole === 'admin' ? 'text-indigo-200' : 'text-gray-500'
+                      }`}
+                    >
+                      {new Date(msg.createdAt).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      {msg.isRead && msg.senderRole !== 'admin' && ' ✓✓'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Reply Input */}
+            <div className="border-t border-gray-200 p-4 bg-white">
+              <form onSubmit={handleSendReply} className="space-y-2">
+                <textarea
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  placeholder="Répondre..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm resize-none"
+                  disabled={replySending}
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-500">
+                    {reply.length} caractères
+                  </p>
+                  <button
+                    type="submit"
+                    disabled={replySending || !reply.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-semibold transition text-sm"
+                  >
+                    {replySending ? 'Envoi...' : 'Envoyer'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-50">
+            <div className="text-gray-500 text-center">
+              <p className="text-lg font-semibold mb-2">Sélectionnez une conversation</p>
+              <p className="text-sm">Cliquez sur une conversation pour voir les messages</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { siteName, siteDescription, logoUrl } = useBranding();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState<any[]>([]);
   const [assessments, setAssessments] = useState<any[]>([]);
@@ -264,6 +553,17 @@ export default function AdminPage() {
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [selectedContent, setSelectedContent] = useState<any>(null);
   const [contentImageError, setContentImageError] = useState('');
+  const [categories, setCategories] = useState<any[]>([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [newCategory, setNewCategory] = useState({
+    name: '',
+    description: '',
+    icon: '📁',
+    color: '#4f46e5',
+    order: 0,
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -277,15 +577,90 @@ export default function AdminPage() {
     }
   }, [status, router, session]);
 
+  // Seed default categories if none exist
+  const seedDefaultCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.categories && data.categories.length === 0) {
+          // No categories exist, create defaults
+          const defaultCategories = [
+            {
+              name: 'Bases de la Nutrition',
+              description: 'Concepts fondamentaux de la nutrition et de la santé alimentaire',
+              icon: '🥗',
+              color: '#10b981',
+              order: 1,
+            },
+            {
+              name: 'Planification des Repas',
+              description: 'Guide pour planifier vos repas et créer des menus équilibrés',
+              icon: '📋',
+              color: '#f59e0b',
+              order: 2,
+            },
+            {
+              name: 'Gestion du Poids',
+              description: 'Stratégies et conseils pour une gestion saine du poids',
+              icon: '⚖️',
+              color: '#ef4444',
+              order: 3,
+            },
+            {
+              name: 'Alimentation Saine',
+              description: 'Conseils pour un régime alimentaire équilibré et sain',
+              icon: '🍎',
+              color: '#06b6d4',
+              order: 4,
+            },
+            {
+              name: 'Fitness',
+              description: 'Nutrition en relation avec l\'exercice et la forme physique',
+              icon: '💪',
+              color: '#8b5cf6',
+              order: 5,
+            },
+            {
+              name: 'Pleine Conscience',
+              description: 'Alimentation consciente et bien-être mental',
+              icon: '🧘',
+              color: '#ec4899',
+              order: 6,
+            },
+          ];
+
+          for (const cat of defaultCategories) {
+            try {
+              await fetch('/api/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cat),
+              });
+            } catch (err) {
+              console.error('Failed to create default category:', err);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to seed categories:', error);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [usersRes, contentsRes, assessmentsRes, consultationRes] = await Promise.all([
+      // Seed defaults first
+      await seedDefaultCategories();
+
+      const [usersRes, contentsRes, assessmentsRes, consultationRes, categoriesRes] = await Promise.all([
         fetch('/api/admin/users'),
         fetch('/api/admin/content'),
         fetch('/api/assessment'),
         fetch('/api/consultation-request'),
+        fetch('/api/admin/categories'),
       ]);
 
       if (usersRes.ok) {
@@ -320,11 +695,39 @@ export default function AdminPage() {
         const error = await consultationRes.json();
         console.error('Failed to fetch consultation requests:', consultationRes.status, error);
       }
+
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json();
+        setCategories(data.categories || []);
+      } else {
+        const error = await categoriesRes.json();
+        console.error('Failed to fetch categories:', categoriesRes.status, error);
+      }
     } catch (error) {
       console.error('Failed to fetch data:', error);
       setError(`Error loading data: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        setCategories(data.categories || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Refresh categories when switching to content or categories tabs
+    if (tab === 'content' || tab === 'categories') {
+      fetchCategories();
     }
   };
 
@@ -546,6 +949,101 @@ export default function AdminPage() {
     }
   };
 
+  const openCategoryModal = (category?: any) => {
+    if (category) {
+      setSelectedCategory(category);
+      setNewCategory({
+        name: category.name,
+        description: category.description,
+        icon: category.icon,
+        color: category.color,
+        order: category.order,
+      });
+      setIsEditingCategory(true);
+    } else {
+      setNewCategory({
+        name: '',
+        description: '',
+        icon: '📁',
+        color: '#4f46e5',
+        order: 0,
+      });
+      setIsEditingCategory(false);
+      setSelectedCategory(null);
+    }
+    setShowCategoryModal(true);
+  };
+
+  const closeCategoryModal = () => {
+    setShowCategoryModal(false);
+    setIsEditingCategory(false);
+    setSelectedCategory(null);
+    setNewCategory({
+      name: '',
+      description: '',
+      icon: '📁',
+      color: '#4f46e5',
+      order: 0,
+    });
+  };
+
+  const handleSaveCategory = async () => {
+    if (!newCategory.name || !newCategory.description) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    try {
+      const url = isEditingCategory ? `/api/admin/categories?id=${selectedCategory._id}` : '/api/admin/categories';
+      const method = isEditingCategory ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCategory),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (isEditingCategory) {
+          setCategories(categories.map(c => c._id === data.category._id ? data.category : c));
+          alert('Catégorie mise à jour avec succès');
+        } else {
+          setCategories([...categories, data.category]);
+          alert('Catégorie créée avec succès');
+        }
+        closeCategoryModal();
+      } else {
+        const error = await res.json();
+        alert(`Erreur: ${error.error || 'Impossible de traiter la requête'}`);
+      }
+    } catch (error) {
+      console.error('Failed to save category:', error);
+      alert('Erreur lors de la sauvegarde de la catégorie');
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie?')) {
+      try {
+        const res = await fetch(`/api/admin/categories?id=${categoryId}`, {
+          method: 'DELETE',
+        });
+
+        if (res.ok) {
+          setCategories(categories.filter((c) => c._id !== categoryId));
+          alert('Catégorie supprimée avec succès');
+        } else {
+          const error = await res.json();
+          alert(`Erreur: ${error.error || 'Impossible de supprimer la catégorie'}`);
+        }
+      } catch (error) {
+        console.error('Failed to delete category:', error);
+        alert('Erreur lors de la suppression de la catégorie');
+      }
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -623,7 +1121,7 @@ export default function AdminPage() {
             <div className="border-b border-gray-200 overflow-x-auto sticky top-14 sm:top-16 z-40 bg-white -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8">
               <div className="flex gap-1">
               <button
-                onClick={() => setActiveTab('users')}
+                onClick={() => handleTabChange('users')}
                 className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'users'
                     ? 'border-indigo-600 text-indigo-600'
@@ -645,7 +1143,7 @@ export default function AdminPage() {
                 <span className="hidden sm:inline">Évaluations</span>
               </button>
               <button
-                onClick={() => setActiveTab('content')}
+                onClick={() => handleTabChange('content')}
                 className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === 'content'
                     ? 'border-indigo-600 text-indigo-600'
@@ -654,6 +1152,17 @@ export default function AdminPage() {
               >
                 <span className="inline sm:hidden">📝</span>
                 <span className="hidden sm:inline">Contenu</span>
+              </button>
+              <button
+                onClick={() => handleTabChange('categories')}
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
+                  activeTab === 'categories'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span className="inline sm:hidden">🏷️</span>
+                <span className="hidden sm:inline">Catégories</span>
               </button>
               <button
                 onClick={() => setActiveTab('appointments')}
@@ -676,6 +1185,17 @@ export default function AdminPage() {
               >
                 <span className="inline sm:hidden">💬</span>
                 <span className="hidden sm:inline">Consultations</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('messages')}
+                className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 font-semibold text-xs sm:text-sm md:text-base whitespace-nowrap transition-colors border-b-2 ${
+                  activeTab === 'messages'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <span className="inline sm:hidden">✉️</span>
+                <span className="hidden sm:inline">Messages</span>
               </button>
               <button
                 onClick={() => setActiveTab('branding')}
@@ -840,6 +1360,77 @@ export default function AdminPage() {
               </div>
             )}
 
+            {/* Categories Tab */}
+            {activeTab === 'categories' && (
+              <div>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Catégories</h2>
+                  <button
+                    onClick={() => openCategoryModal()}
+                    className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors text-sm sm:text-base"
+                  >
+                    + Ajouter
+                  </button>
+                </div>
+                {loading ? (
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">{t('common.loading')}</p>
+                  </div>
+                ) : categories.length === 0 ? (
+                  <div className="text-center py-6 sm:py-8">
+                    <p className="text-gray-600 text-sm sm:text-base">Aucune catégorie</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3 sm:gap-4">
+                    {categories.map((category: any) => (
+                      <div key={category._id} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div
+                              className="text-2xl flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg"
+                              style={{ backgroundColor: `${category.color}20` }}
+                            >
+                              {category.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
+                                {language === 'ar' && category.nameAr ? category.nameAr : category.name}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                                {language === 'ar' && category.descriptionAr ? category.descriptionAr : category.description}
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                                  style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                                >
+                                  {category.slug}
+                                </span>
+                                <span className="text-xs text-gray-500">Ordre: {category.order}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => openCategoryModal(category)}
+                              className="px-2 sm:px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm rounded transition-colors"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => handleDeleteCategory(category._id)}
+                              className="px-2 sm:px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm rounded transition-colors"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Appointments Tab */}
             {activeTab === 'appointments' && (
               <div>
@@ -903,6 +1494,11 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Messages Tab */}
+            {activeTab === 'messages' && (
+              <MessagesTab t={t} />
             )}
 
             {/* Branding Tab */}
@@ -1979,13 +2575,15 @@ export default function AdminPage() {
                     onChange={(e) => setNewContent({ ...newContent, category: e.target.value })}
                   >
                     <option value="">Sélectionner une catégorie</option>
-                    <option value="nutrition-basics">Bases de la Nutrition</option>
-                    <option value="meal-planning">Planification des Repas</option>
-                    <option value="weight-management">Gestion du Poids</option>
-                    <option value="healthy-eating">Alimentation Saine</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="mindfulness">Pleine Conscience</option>
+                    {categories.map((cat: any) => (
+                      <option key={cat._id} value={cat.slug}>
+                        {cat.icon} {language === 'ar' && cat.nameAr ? cat.nameAr : cat.name}
+                      </option>
+                    ))}
                   </select>
+                  {categories.length === 0 && (
+                    <p className="text-xs text-yellow-600 mt-1">📝 Créez d'abord une catégorie dans l'onglet "Catégories"</p>
+                  )}
                 </div>
               </div>
 
@@ -2078,6 +2676,134 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col my-4 sm:my-0">
+            <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-shrink-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900">
+                {isEditingCategory ? 'Modifier Catégorie' : 'Nouvelle Catégorie'}
+              </h3>
+              <button
+                onClick={closeCategoryModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold ml-4 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom de la Catégorie *
+                </label>
+                <input
+                  type="text"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  placeholder="ex: Nutrition Basique"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
+                <textarea
+                  value={newCategory.description}
+                  onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                  placeholder="Décrivez cette catégorie..."
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Icône
+                  </label>
+                  <input
+                    type="text"
+                    value={newCategory.icon}
+                    onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                    placeholder="ex: 📚"
+                    maxLength={2}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none text-center"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Couleur
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={newCategory.color}
+                      onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                      className="h-10 w-16 border border-gray-300 rounded-lg cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={newCategory.color}
+                      onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                      placeholder="#4f46e5"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ordre d'Affichage
+                </label>
+                <input
+                  type="number"
+                  value={newCategory.order}
+                  onChange={(e) => setNewCategory({ ...newCategory, order: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                />
+                <p className="text-xs text-gray-500 mt-1">Les catégories seront triées par ordre (plus bas = affiché en premier)</p>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="text-sm text-gray-700 mb-2">Aperçu:</p>
+                <div
+                  className="p-3 rounded-lg flex items-center gap-2"
+                  style={{ backgroundColor: `${newCategory.color}20` }}
+                >
+                  <span className="text-2xl">{newCategory.icon}</span>
+                  <div>
+                    <p className="font-semibold text-gray-900">{newCategory.name || 'Nom'}</p>
+                    <p className="text-sm text-gray-600">{newCategory.description || 'Description'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-end gap-3">
+              <button
+                onClick={closeCategoryModal}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveCategory}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                {isEditingCategory ? 'Mettre à jour' : 'Créer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

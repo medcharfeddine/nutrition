@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/language-provider';
+import { useNotification } from '@/lib/notification-context';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function MessagesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t } = useLanguage();
+  const { addNotification } = useNotification();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [messageContent, setMessageContent] = useState('');
@@ -91,9 +93,30 @@ export default function MessagesPage() {
         setMessageContent('');
         // Optimistically add the message immediately using functional setState
         setMessages(prevMessages => [...prevMessages, data.message]);
+        
+        // Show success notification
+        addNotification({
+          type: 'success',
+          title: 'Message Envoyé',
+          message: 'Votre message a été envoyé avec succès à l\'équipe de support.',
+          duration: 4000,
+        });
+      } else {
+        addNotification({
+          type: 'error',
+          title: 'Erreur',
+          message: 'Impossible d\'envoyer le message. Veuillez réessayer.',
+          duration: 4000,
+        });
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      addNotification({
+        type: 'error',
+        title: 'Erreur de Connexion',
+        message: 'Une erreur est survenue lors de l\'envoi du message.',
+        duration: 4000,
+      });
     } finally {
       setMessageLoading(false);
     }

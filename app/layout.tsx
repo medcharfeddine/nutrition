@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-provider";
 import { BrandingProvider } from "@/lib/branding-provider";
 import { LanguageProvider } from "@/lib/language-provider";
+import { NotificationProvider } from "@/lib/notification-context";
+import { NotificationContainer } from "@/components/NotificationContainer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +38,10 @@ export default function RootLayout({
         <LanguageProvider>
           <AuthProvider>
             <BrandingProvider>
-              {children}
+              <NotificationProvider>
+                <NotificationContainer />
+                {children}
+              </NotificationProvider>
             </BrandingProvider>
           </AuthProvider>
         </LanguageProvider>

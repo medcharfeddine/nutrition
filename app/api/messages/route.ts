@@ -86,10 +86,25 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const conversationId = searchParams.get('conversationId');
     const userId = searchParams.get('userId');
+    const userRole = (session.user as any).role;
 
     let messages: any[] = [];
 
-    if (conversationId) {
+    if (userRole === 'admin') {
+      // Admin viewing all messages or a specific conversation
+      if (conversationId) {
+        messages = await Message.find({ conversationId })
+          .sort({ createdAt: 1 })
+          .lean();
+      } else {
+        // Get all messages for admin
+        messages = await Message.find({
+          recipientRole: 'admin',
+        })
+          .sort({ createdAt: -1 })
+          .lean();
+      }
+    } else if (conversationId) {
       // Get messages for a specific conversation
       messages = await Message.find({ conversationId })
         .sort({ createdAt: 1 })
@@ -136,6 +151,60 @@ export async function GET(request: NextRequest) {
     console.error('Failed to fetch messages:', error);
     return NextResponse.json(
       { error: 'Failed to fetch messages' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const body = await request.json();
+    const { conversationId, markAsRead } = body;
+
+    if (!conversationId) {
+      return NextResponse.json(
+        { error: 'Conversation ID is required' },
+        { status: 400 }
+      );
+    }
+
+    if (markAsRead) {
+      // Mark all messages in conversation as read for the current user
+      const result = await Message.updateMany(
+        {
+          conversationId,
+          recipientId: session.user.id,
+          isRead: false,
+        },
+        { isRead: true }
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Messages marked as read',
+          modifiedCount: result.modifiedCount,
+        },
+        { status: 200 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'No operation specified' },
+      { status: 400 }
+    );
+  } catch (error: any) {
+    console.error('Failed to update message status:', error);
+    return NextResponse.json(
+      { error: 'Failed to update message status' },
       { status: 500 }
     );
   }

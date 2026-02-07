@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -46,16 +46,17 @@ export default function AssessmentPage() {
     otherObjective: '',
   });
 
-  // Redirect if not authenticated
-  if (status === 'unauthenticated') {
-    router.push('/auth/login');
-    return null;
-  } else if (status === 'authenticated' && session?.user?.hasCompletedAssessment) {
-    router.push('/dashboard');
-    return null;
-  }
+  // Handle navigation redirects
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    } else if (status === 'authenticated' && session?.user?.hasCompletedAssessment) {
+      router.push('/dashboard');
+    }
+  }, [status, session?.user?.hasCompletedAssessment, router]);
 
-  if (status === 'loading') {
+  // Show loading while checking auth or redirecting
+  if (status === 'loading' || status === 'unauthenticated' || session?.user?.hasCompletedAssessment) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <p className="text-gray-600 text-lg">{t('common.loading')}</p>

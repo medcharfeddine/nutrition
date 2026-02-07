@@ -6,12 +6,14 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/language-provider';
+import { useNotification } from '@/lib/notification-context';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function ConsultationRequestPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t } = useLanguage();
+  const { addNotification } = useNotification();
   const [activeTab, setActiveTab] = useState('request');
   const [consultationType, setConsultationType] = useState<'initial' | 'follow-up' | 'specific-concern'>('initial');
   const [goals, setGoals] = useState('');
@@ -83,12 +85,36 @@ export default function ConsultationRequestPage() {
         setConsultationType('initial');
         setUrgency('medium');
         fetchRequests();
+        
+        // Show success notification
+        addNotification({
+          type: 'success',
+          title: 'Demande Soumise',
+          message: 'Votre demande de consultation a été soumise avec succès. Un administrateur l\'examinera bientôt.',
+          duration: 5000,
+        });
       } else {
         setError(data.error || t('consultation.failedToSubmit'));
+        
+        // Show error notification
+        addNotification({
+          type: 'error',
+          title: 'Erreur',
+          message: data.error || 'Impossible de soumettre la demande. Veuillez réessayer.',
+          duration: 4000,
+        });
       }
     } catch (error) {
       setError(t('common.errorOccurred'));
       console.error('Failed to submit request:', error);
+      
+      // Show error notification
+      addNotification({
+        type: 'error',
+        title: 'Erreur de Connexion',
+        message: 'Une erreur est survenue lors de la soumission de la demande.',
+        duration: 4000,
+      });
     } finally {
       setLoading(false);
     }

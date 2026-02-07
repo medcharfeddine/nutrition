@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/language-provider';
+import { useNotification } from '@/lib/notification-context';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 export default function AppointmentsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { t } = useLanguage();
+  const { addNotification } = useNotification();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'view' | 'book'>('view');
@@ -129,6 +131,12 @@ export default function AppointmentsPage() {
 
     if (!selectedSpecialist || !selectedDate || !selectedSlot) {
       setErrorMessage('Please select a specialist, date, and time');
+      addNotification({
+        type: 'warning',
+        title: 'Sélection Incomplète',
+        message: 'Veuillez sélectionner un spécialiste, une date et une heure.',
+        duration: 4000,
+      });
       return;
     }
 
@@ -167,13 +175,37 @@ export default function AppointmentsPage() {
         setConsultationType('initial');
         setActiveTab('view');
         fetchAppointments();
+        
+        // Show success notification
+        addNotification({
+          type: 'success',
+          title: 'Rendez-vous Réservé',
+          message: 'Votre demande de rendez-vous a été envoyée avec succès. En attente de confirmation du spécialiste.',
+          duration: 5000,
+        });
       } else {
         const error = await res.json();
         setErrorMessage(error.error || 'Failed to book appointment');
+        
+        // Show error notification
+        addNotification({
+          type: 'error',
+          title: 'Erreur',
+          message: error.error || 'Impossible de réserver le rendez-vous. Veuillez réessayer.',
+          duration: 4000,
+        });
       }
     } catch (error) {
       setErrorMessage('An error occurred. Please try again.');
       console.error('Failed to book appointment:', error);
+      
+      // Show error notification
+      addNotification({
+        type: 'error',
+        title: 'Erreur de Connexion',
+        message: 'Une erreur est survenue lors de la réservation du rendez-vous.',
+        duration: 4000,
+      });
     } finally {
       setBookingLoading(false);
     }
