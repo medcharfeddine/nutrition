@@ -40,14 +40,8 @@ const ContentSchema: Schema<IContent> = new Schema(
     },
     category: {
       type: String,
-      enum: [
-        'nutrition-basics',
-        'meal-planning',
-        'weight-management',
-        'healthy-eating',
-        'fitness',
-        'mindfulness',
-      ],
+      // Allow any string value to support dynamic categories from the Category collection
+      // Previously had enum constraint, now flexible for syncing with actual categories
     },
     tags: [String],
   },

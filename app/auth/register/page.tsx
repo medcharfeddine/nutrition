@@ -140,14 +140,14 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(typeof data.error === 'string' ? data.error : 'Une erreur s\'est produite');
+        throw new Error(typeof data.error === 'string' ? data.error : t('common.errorOccurred'));
       }
 
       setTimeout(() => {
         router.push('/dashboard');
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur s\'est produite');
+      setError(err instanceof Error ? err.message : t('common.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -184,8 +184,8 @@ export default function RegisterPage() {
             ) : (
               <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
             )}
-            <p className="text-gray-600 text-sm sm:text-base">Créez Votre Compte</p>
-            <p className="text-gray-500 text-xs sm:text-sm mt-2">Étape 1 sur 2</p>
+            <p className="text-gray-600 text-sm sm:text-base">{t('common.educationalPlatform')}</p>
+            <p className="text-gray-500 text-xs sm:text-sm mt-2">{t('auth.stepText')} 1 {t('auth.ofText')} 2</p>
           </div>
 
           {error && (
@@ -197,7 +197,7 @@ export default function RegisterPage() {
           <form onSubmit={handleBasicInfoSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nom Complet
+                {t('auth.fullName')}
               </label>
               <input
                 type="text"
@@ -205,13 +205,13 @@ export default function RegisterPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                placeholder="John Doe"
+                placeholder={t('auth.namePlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Adresse E-mail
+                {t('auth.emailAddress')}
               </label>
               <input
                 type="email"
@@ -219,13 +219,13 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                placeholder="you@example.com"
+                placeholder={t('auth.emailPlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
+                {t('auth.passwordLabel')}
               </label>
               <input
                 type="password"
@@ -233,13 +233,13 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                placeholder="Enter password"
+                placeholder={t('auth.passwordPlaceholder')}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirmer le Mot de passe
+                {t('auth.confirmPassword')}
               </label>
               <input
                 type="password"
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-                placeholder="Confirm password"
+                placeholder={t('auth.confirmPasswordPlaceholder')}
               />
             </div>
 
@@ -256,14 +256,14 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-2 rounded-lg transition duration-200"
             >
-              {loading ? 'Inscription en cours...' : 'Continuer'}
+              {loading ? t('auth.registering') : t('auth.continue')}
             </button>
           </form>
 
           <p className="text-center text-gray-600 text-sm mt-6">
-            Vous avez déjà un compte?{' '}
+            {t('auth.alreadyHaveAccount')}{' '}
             <Link href="/auth/login" className="text-indigo-600 hover:underline font-semibold">
-              Connectez-vous
+              {t('common.signIn')}
             </Link>
           </p>
         </div>
@@ -283,17 +283,17 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Formulaire d'Évaluation Nutritionnel</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('auth.assessmentForm')}</h2>
           <p className="text-gray-600 mb-6">
-            Ce formulaire a pour objectif de recueillir les informations générales, nutritionnelles et de santé nécessaires à la création de votre profil nutritionnel personnalisé.
+            {t('auth.assessmentFormDesc')}
           </p>
         </div>
 
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-700">Section {currentStep - 1} de 6</span>
-            <span className="text-sm text-gray-600">{Math.round(((currentStep - 1) / 6) * 100)}%</span>
+            <span className="text-sm font-semibold text-gray-700">{t('auth.section')} {currentStep - 1} {t('auth.ofText')} 6</span>
+            <span className="text-sm text-gray-600">{Math.round(((currentStep - 1) / 6) * 100)}{t('auth.percentage')}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
@@ -315,12 +315,12 @@ export default function RegisterPage() {
           {currentStep === 2 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Informations Générales</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.personalInfo')}</h3>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom et Prénom <span className="text-red-500">*</span>
+                  {t('auth.fullName')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <input
                   type="text"
@@ -329,14 +329,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Votre nom complet"
+                  placeholder={t('auth.namePlaceholder')}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date de Naissance <span className="text-red-500">*</span>
+                    {t('auth.dateOfBirth')} <span className="text-red-500">{t('auth.required')}</span>
                   </label>
                   <input
                     type="date"
@@ -350,7 +350,7 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Sexe <span className="text-red-500">*</span>
+                    {t('auth.gender')} <span className="text-red-500">{t('auth.required')}</span>
                   </label>
                   <select
                     name="gender"
@@ -359,10 +359,10 @@ export default function RegisterPage() {
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                   >
-                    <option value="">Sélectionnez</option>
-                    <option value="male">Homme</option>
-                    <option value="female">Femme</option>
-                    <option value="other">Autre</option>
+                    <option value="">{t('auth.selectOption')}</option>
+                    <option value="male">{t('auth.male')}</option>
+                    <option value="female">{t('auth.female')}</option>
+                    <option value="other">{t('auth.other')}</option>
                   </select>
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Région <span className="text-red-500">*</span>
+                    {t('auth.region')} <span className="text-red-500">{t('auth.required')}</span>
                   </label>
                   <input
                     type="text"
@@ -379,13 +379,13 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="Votre région"
+                    placeholder={t('auth.emailPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Numéro de Téléphone
+                    {t('auth.phoneNumber')}
                   </label>
                   <input
                     type="tel"
@@ -393,7 +393,7 @@ export default function RegisterPage() {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="Votre numéro"
+                    placeholder={t('auth.emailPlaceholder')}
                   />
                 </div>
               </div>
@@ -401,7 +401,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Taille (cm) <span className="text-red-500">*</span>
+                    {t('auth.height')} <span className="text-red-500">{t('auth.required')}</span>
                   </label>
                   <input
                     type="number"
@@ -410,13 +410,13 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="p.ex., 170"
+                    placeholder={t('auth.heightPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Poids (kg) <span className="text-red-500">*</span>
+                    {t('auth.weight')} <span className="text-red-500">{t('auth.required')}</span>
                   </label>
                   <input
                     type="number"
@@ -425,14 +425,14 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="p.ex., 70"
+                    placeholder={t('auth.weightPlaceholder')}
                   />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Niveau d'Activité Physique <span className="text-red-500">*</span>
+                  {t('auth.physicalActivityLevel')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <select
                   name="physicalActivityLevel"
@@ -441,10 +441,10 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="sedentary">Sédentaire</option>
-                  <option value="moderate">Modéré</option>
-                  <option value="active">Actif</option>
+                  <option value="">{t('auth.selectOption')}</option>
+                  <option value="sedentary">{t('auth.sedentary')}</option>
+                  <option value="moderate">{t('auth.moderate')}</option>
+                  <option value="active">{t('auth.active')}</option>
                 </select>
               </div>
             </div>
@@ -453,11 +453,11 @@ export default function RegisterPage() {
           {/* Section 3: Lifestyle */}
           {currentStep === 3 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Mode de Vie</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.lifestyle')}</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vous fumez? <span className="text-red-500">*</span>
+                  {t('auth.smoking')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <select
                   name="smoking"
@@ -466,16 +466,16 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="never">Jamais</option>
-                  <option value="former">Ancien fumeur</option>
-                  <option value="current">Oui</option>
+                  <option value="">{t('auth.selectOption')}</option>
+                  <option value="never">{t('auth.never')}</option>
+                  <option value="former">{t('auth.formerSmoker')}</option>
+                  <option value="current">{t('auth.currentSmoker')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Consommation d'Alcool <span className="text-red-500">*</span>
+                  {t('auth.alcoholConsumption')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <select
                   name="alcoholConsumption"
@@ -484,16 +484,16 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="never">Jamais</option>
-                  <option value="occasional">Occasionnel</option>
-                  <option value="regular">Régulière</option>
+                  <option value="">{t('auth.selectOption')}</option>
+                  <option value="never">{t('auth.never')}</option>
+                  <option value="occasional">{t('auth.occasional')}</option>
+                  <option value="regular">{t('auth.regular')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Heures de Sommeil par Nuit <span className="text-red-500">*</span>
+                  {t('auth.sleepHours')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <input
                   type="number"
@@ -504,7 +504,7 @@ export default function RegisterPage() {
                   min="0"
                   max="24"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="p.ex., 7"
+                  placeholder={t('auth.sleepHoursPlaceholder')}
                 />
               </div>
             </div>
@@ -513,11 +513,11 @@ export default function RegisterPage() {
           {/* Section 4: Eating Habits */}
           {currentStep === 4 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Habitudes Alimentaires</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.eatingHabits')}</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre de Repas par Jour <span className="text-red-500">*</span>
+                  {t('auth.mealsPerDay')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <select
                   name="mealsPerDay"
@@ -526,12 +526,12 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="1">1 repas</option>
-                  <option value="2">2 repas</option>
-                  <option value="3">3 repas</option>
-                  <option value="4">4 repas</option>
-                  <option value="5">5+ repas</option>
+                  <option value="">{t('auth.selectOption')}</option>
+                  <option value="1">1 {t('auth.mealsPerDay')}</option>
+                  <option value="2">2 {t('auth.mealsPerDay')}</option>
+                  <option value="3">3 {t('auth.mealsPerDay')}</option>
+                  <option value="4">4 {t('auth.mealsPerDay')}</option>
+                  <option value="5">5+ {t('auth.mealsPerDay')}</option>
                 </select>
               </div>
             </div>
@@ -540,22 +540,29 @@ export default function RegisterPage() {
           {/* Section 5: Health Status */}
           {currentStep === 5 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">État de Santé</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.healthStatus')}</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Maladies Chroniques
+                  {t('auth.chronicDiseases')}
                 </label>
                 <div className="space-y-2">
-                  {['Diabète', 'Hypertension', 'Maladie Cardiaque', 'Obésité', 'Aucune'].map((disease) => (
-                    <label key={disease} className="flex items-center">
+                  {[
+                    { key: 'diabetes', label: t('auth.diabetes') },
+                    { key: 'hypertension', label: t('auth.hypertension') },
+                    { key: 'heart', label: t('auth.heartDisease') },
+                    { key: 'obesity', label: t('auth.obesity') },
+                    { key: 'none', label: t('auth.none') }
+                  ].map(({ key, label }) => (
+                    <label key={key} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.chronicDiseases.includes(disease)}
-                        onChange={() => handleCheckboxChange('chronicDiseases', disease)}
+                        value={key}
+                        checked={formData.chronicDiseases.includes(key)}
+                        onChange={() => handleCheckboxChange('chronicDiseases', key)}
                         className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
                       />
-                      <span className="ml-2 text-gray-700">{disease}</span>
+                      <span className="ml-2 text-gray-700">{label}</span>
                     </label>
                   ))}
                 </div>
@@ -563,41 +570,50 @@ export default function RegisterPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Traitement Médical en Cours
+                  {t('auth.medicalTreatment')}
                 </label>
                 <textarea
                   name="medicalTreatment"
                   value={formData.medicalTreatment}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez vos traitements..."
+                  placeholder={t('auth.medicalTreatmentPlaceholder')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Allergies et Intolérances
+                  {t('auth.allergiesAndIntolerances')}
                 </label>
                 <div className="space-y-2">
-                  {['Arachides', 'Noix', 'Fruits de Mer', 'Lait', 'Gluten', 'Oeufs', 'Autres'].map((allergy) => (
-                    <label key={allergy} className="flex items-center">
+                  {[
+                    { key: 'peanuts', label: t('auth.peanuts') },
+                    { key: 'nuts', label: t('auth.nuts') },
+                    { key: 'seafood', label: t('auth.seafood') },
+                    { key: 'dairy', label: t('auth.dairy') },
+                    { key: 'gluten', label: t('auth.gluten') },
+                    { key: 'eggs', label: t('auth.eggs') },
+                    { key: 'other', label: t('auth.other') }
+                  ].map(({ key, label }) => (
+                    <label key={key} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.allergiesIntolerances.includes(allergy)}
-                        onChange={() => handleCheckboxChange('allergiesIntolerances', allergy)}
+                        value={key}
+                        checked={formData.allergiesIntolerances.includes(key)}
+                        onChange={() => handleCheckboxChange('allergiesIntolerances', key)}
                         className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
                       />
-                      <span className="ml-2 text-gray-700">{allergy}</span>
+                      <span className="ml-2 text-gray-700">{label}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {formData.allergiesIntolerances.includes('Autres') && (
+              {formData.allergiesIntolerances.includes('other') && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Veuillez spécifier
+                    {t('auth.pleaseSpecify')}
                   </label>
                   <input
                     type="text"
@@ -605,7 +621,7 @@ export default function RegisterPage() {
                     value={formData.otherAllergies}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="Autres allergies..."
+                    placeholder={t('auth.otherAllergiesPlaceholder')}
                   />
                 </div>
               )}
@@ -615,11 +631,11 @@ export default function RegisterPage() {
           {/* Section 6: Nutritional Objectives */}
           {currentStep === 6 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Objectifs Nutritionnels</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.nutritionalObjectives')}</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Objectif Principal <span className="text-red-500">*</span>
+                  {t('auth.mainObjective')} <span className="text-red-500">{t('auth.required')}</span>
                 </label>
                 <select
                   name="mainObjective"
@@ -628,25 +644,25 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="weight-loss">Perdre du Poids</option>
-                  <option value="weight-gain">Gagner du Poids</option>
-                  <option value="muscle-gain">Gagner de la Masse Musculaire</option>
-                  <option value="health-improvement">Améliorer la Santé</option>
-                  <option value="performance">Améliorer les Performances</option>
+                  <option value="">{t('auth.selectOption')}</option>
+                  <option value="weight-loss">{t('auth.weightLoss')}</option>
+                  <option value="weight-gain">{t('auth.weightGain')}</option>
+                  <option value="muscle-gain">{t('auth.muscleMass')}</option>
+                  <option value="health-improvement">{t('auth.healthImprovement')}</option>
+                  <option value="performance">{t('auth.performance')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Autres Objectifs
+                  {t('auth.otherObjectives')}
                 </label>
                 <textarea
                   name="otherObjective"
                   value={formData.otherObjective}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez vos autres objectifs..."
+                  placeholder={t('auth.otherObjectivesPlaceholder')}
                   rows={4}
                 />
               </div>
@@ -661,7 +677,7 @@ export default function RegisterPage() {
                 onClick={goToPreviousStep}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
               >
-                Retour
+                {t('auth.previous')}
               </button>
             )}
             <div className="flex-1"></div>
@@ -670,7 +686,7 @@ export default function RegisterPage() {
               disabled={loading}
               className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg transition"
             >
-              {loading ? 'Traitement...' : currentStep === 6 ? 'Terminer' : 'Suivant'}
+              {loading ? t('auth.processing') : currentStep === 6 ? t('auth.finish') : t('auth.next')}
             </button>
           </div>
         </form>

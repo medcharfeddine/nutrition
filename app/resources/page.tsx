@@ -14,6 +14,7 @@ export default function ResourcesPage() {
   const { t } = useLanguage();
   const [contents, setContents] = useState<any[]>([]);
   const [filteredContents, setFilteredContents] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,6 +30,7 @@ export default function ResourcesPage() {
       router.push('/auth/login');
     } else if (status === 'authenticated') {
       fetchContents();
+      fetchCategories();
       fetchBranding();
     }
   }, [status, router]);
@@ -42,6 +44,37 @@ export default function ResourcesPage() {
       }
     } catch (error) {
       console.error('Failed to fetch branding:', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories');
+      if (res.ok) {
+        const data = await res.json();
+        // Format categories for filter display
+        const formattedCategories = [
+          { value: 'all', label: t('resources.allResources') },
+          ...data.categories.map((cat: any) => ({
+            value: cat.slug,
+            label: cat.name,
+          })),
+        ];
+        setCategories(formattedCategories);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      // Fallback to default categories if fetch fails
+      const defaultCategories = [
+        { value: 'all', label: t('resources.allResources') },
+        { value: 'nutrition-basics', label: 'Bases de la Nutrition' },
+        { value: 'meal-planning', label: 'Planification des Repas' },
+        { value: 'weight-management', label: 'Gestion du Poids' },
+        { value: 'healthy-eating', label: 'Alimentation Saine' },
+        { value: 'fitness', label: 'Forme Physique' },
+        { value: 'mindfulness', label: 'Pleine Conscience' },
+      ];
+      setCategories(defaultCategories);
     }
   };
 
@@ -107,16 +140,6 @@ export default function ResourcesPage() {
   if (!session) {
     return null;
   }
-
-  const categories = [
-    { value: 'all', label: t('resources.allResources') },
-    { value: 'nutrition-basics', label: 'Bases de la Nutrition' },
-    { value: 'meal-planning', label: 'Planification des Repas' },
-    { value: 'weight-management', label: 'Gestion du Poids' },
-    { value: 'healthy-eating', label: 'Alimentation Saine' },
-    { value: 'fitness', label: 'Forme Physique' },
-    { value: 'mindfulness', label: 'Pleine Conscience' },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">

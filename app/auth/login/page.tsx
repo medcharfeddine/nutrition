@@ -69,7 +69,7 @@ export default function LoginPage() {
           {branding?.logoUrl ? (
             <Image 
               src={branding.logoUrl} 
-              alt={branding.siteName || 'NutriEd'} 
+              alt={branding.siteName || 'NutriÉd'} 
               width={200}
               height={200}
               className="h-16 sm:h-20 w-auto mx-auto mb-4 object-contain"
@@ -79,7 +79,7 @@ export default function LoginPage() {
           ) : (
             <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
           )}
-          <p className="text-gray-600 text-sm sm:text-base">{t('common.appDescription')}</p>
+          <p className="text-gray-600 text-sm sm:text-base">{t('common.educationalPlatform')}</p>
         </div>
 
         {error && (

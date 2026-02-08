@@ -2,7 +2,9 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBranding extends Document {
   siteName: string;
+  siteNameAr?: string;
   siteDescription: string;
+  siteDescriptionAr?: string;
   logoUrl?: string;
   logoPublicId?: string;
   faviconUrl?: string;
@@ -20,10 +22,18 @@ const BrandingSchema: Schema<IBranding> = new Schema(
       required: true,
       default: 'NutriÉd',
     },
+    siteNameAr: {
+      type: String,
+      default: 'نوتري إيد',
+    },
     siteDescription: {
       type: String,
       required: true,
       default: 'Plateforme de nutrition personnalisée',
+    },
+    siteDescriptionAr: {
+      type: String,
+      default: 'منصة التثقيف الغذائي',
     },
     logoUrl: {
       type: String,

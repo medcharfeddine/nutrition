@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Content from '@/models/Content';
+import Category from '@/models/Category';
 import { z } from 'zod';
 
 const contentSchema = z.object({
@@ -10,14 +11,7 @@ const contentSchema = z.object({
   description: z.string().min(10, 'La description doit contenir au moins 10 caracteres'),
   mediaUrl: z.string().url('URL invalide'),
   content: z.string().optional(),
-  category: z.enum([
-    'nutrition-basics',
-    'meal-planning',
-    'weight-management',
-    'healthy-eating',
-    'fitness',
-    'mindfulness',
-  ]),
+  category: z.string().optional(), // Allow any string that will be validated against database categories
   tags: z.array(z.string()).optional(),
 });
 
@@ -65,6 +59,26 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
+    // Validate category exists in database if provided
+    if (validatedData.data.category) {
+      const categoryExists = await Category.findOne({
+        $or: [
+          { slug: validatedData.data.category },
+          { _id: validatedData.data.category }
+        ]
+      });
+
+      if (!categoryExists) {
+        return NextResponse.json(
+          { error: 'Categorie invalide. Veuillez choisir une categorie existante.' },
+          { status: 400 }
+        );
+      }
+
+      // Store the slug for consistent filtering
+      validatedData.data.category = categoryExists.slug;
+    }
+
     const content = await Content.create(validatedData.data);
 
     return NextResponse.json(
@@ -103,6 +117,26 @@ export async function PUT(req: NextRequest) {
     }
 
     await connectDB();
+
+    // Validate category exists in database if provided
+    if (validatedData.data.category) {
+      const categoryExists = await Category.findOne({
+        $or: [
+          { slug: validatedData.data.category },
+          { _id: validatedData.data.category }
+        ]
+      });
+
+      if (!categoryExists) {
+        return NextResponse.json(
+          { error: 'Categorie invalide. Veuillez choisir une categorie existante.' },
+          { status: 400 }
+        );
+      }
+
+      // Store the slug for consistent filtering
+      validatedData.data.category = categoryExists.slug;
+    }
 
     const content = await Content.findByIdAndUpdate(
       contentId,

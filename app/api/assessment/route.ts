@@ -10,7 +10,7 @@ const assessmentSchema = z.object({
   dateOfBirth: z.string(),
   gender: z.string().min(1, 'Le sexe est requis'),
   region: z.string().min(1, 'La région est requise'),
-  phoneNumber: z.string().min(1, 'Le numéro de téléphone est requis'),
+  phoneNumber: z.string().optional(),
   height: z.string().min(1, 'La taille est requise'),
   weight: z.string().min(1, 'Le poids est requis'),
   physicalActivityLevel: z.string().min(1, 'Le niveau d\'activité est requis'),

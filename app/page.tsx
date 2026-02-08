@@ -11,7 +11,7 @@ import { useLanguage } from '@/lib/language-provider';
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [branding, setBranding] = useState<any>(null);
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Home() {
               {branding?.logoUrl ? (
                 <Image 
                   src={branding.logoUrl} 
-                  alt={branding.siteName || 'NutriEd'} 
+                  alt={ t('common.appName')}
                   width={100}
                   height={100}
                   className="h-8 sm:h-10 w-auto object-contain"
@@ -80,10 +80,10 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 md:py-20 text-center">
         <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
-          {t('common.appName')}
+          {language === 'ar' ? (branding?.siteNameAr || t('common.appName')) : (branding?.siteName || t('common.appName'))}
         </h2>
         <p className="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 max-w-3xl mx-auto">
-          {t('common.appDescription')}
+          {language === 'ar' ? (branding?.siteDescriptionAr || t('common.educationalPlatform')) : (branding?.siteDescription || t('common.educationalPlatform'))}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <Link
