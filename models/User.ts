@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export interface IAssessment extends Document {
+  // Section 1: Identification
   fullName: string;
   dateOfBirth: string;
   gender: string;
@@ -9,17 +10,38 @@ export interface IAssessment extends Document {
   phoneNumber: string;
   height: string;
   weight: string;
-  physicalActivityLevel: string;
+
+  // Section 2: Mode de Vie
   smoking: string;
   alcoholConsumption: string;
-  sleepHours: string;
+  sleepHours?: string;
+  practicesPhysicalActivity: string;
+
+  // Section 3: Physical Activity
+  physicalActivityType?: string;
+  physicalActivityFrequency?: string;
+
+  // Section 4: Eating Habits
   mealsPerDay: string;
-  chronicDiseases: string[];
-  medicalTreatment: string;
-  allergiesIntolerances: string[];
-  otherAllergies: string;
-  mainObjective: string;
-  otherObjective: string;
+  snacksBetweenMeals: string;
+
+  // Section 5: Diabetes
+  diabetesType: string;
+  diabetesDuration: string;
+  diabeticTreatment: string;
+  associatedDiseases?: string[];
+  foodAllergiesIntolerances?: string[];
+
+  // Section 6: Objectives
+  objectives?: string[];
+
+  // Legacy fields (kept for backward compatibility)
+  physicalActivityLevel?: string;
+  medicalTreatment?: string;
+  chronicDiseases?: string[];
+  allergiesIntolerances?: string[];
+  mainObjective?: string;
+  otherObjective?: string;
 }
 
 export interface IUser extends Document {
@@ -80,6 +102,7 @@ const UserSchema: Schema<IUser> = new Schema(
       default: false,
     },
     assessment: {
+      // Section 2: Identification
       fullName: String,
       dateOfBirth: String,
       gender: String,
@@ -87,15 +110,43 @@ const UserSchema: Schema<IUser> = new Schema(
       phoneNumber: String,
       height: String,
       weight: String,
-      physicalActivityLevel: String,
+
+      // Section 3: Lifestyle
+      lifestyleDescription: String,
       smoking: String,
       alcoholConsumption: String,
       sleepHours: String,
+      practicesPhysicalActivity: String,
+
+      // Section 4: Physical Activity
+      physicalActivityDescription: String,
+      physicalActivityType: String,
+      physicalActivityFrequency: String,
+
+      // Section 5: Eating Habits
+      dietaryDescription: String,
       mealsPerDay: String,
-      chronicDiseases: [String],
-      medicalTreatment: String,
-      allergiesIntolerances: [String],
+      snacksBetweenMeals: String,
+
+      // Section 6: Diabetes
+      diabetesDescription: String,
+      isDiabetic: String,
+      diabetesType: String,
+      diabetesDuration: String,
+      diabeticTreatment: String,
+      associatedDiseases: [String],
+      foodAllergiesIntolerances: [String],
       otherAllergies: String,
+
+      // Section 7: Objectives
+      objectivesDescription: String,
+      objectives: [String],
+
+      // Legacy fields (backward compatibility)
+      physicalActivityLevel: String,
+      medicalTreatment: String,
+      chronicDiseases: [String],
+      allergiesIntolerances: [String],
       mainObjective: String,
       otherObjective: String,
     },

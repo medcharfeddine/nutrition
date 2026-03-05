@@ -153,7 +153,7 @@ export default function ProfilePage() {
                     quality={95}
                   />
                 ) : (
-                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriEd</h1>
+                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{t('common.appName')}</h1>
                 )}
               </Link>
               <div className="hidden md:flex gap-6">

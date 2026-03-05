@@ -16,7 +16,12 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   // Get session
-  const session = await auth();
+  let session = null;
+  try {
+    session = await auth();
+  } catch (error) {
+    console.error('Middleware auth error:', error);
+  }
 
   // Redirect unauthenticated users to login
   if (isProtectedRoute && !session) {

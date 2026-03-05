@@ -37,8 +37,9 @@ export default function RegisterPage() {
     }
   };
 
-  // Assessment form data
+  // Assessment form data - 6 sections matching form.txt
   const [formData, setFormData] = useState({
+    // Section 1: Identification
     fullName: '',
     dateOfBirth: '',
     gender: '',
@@ -46,17 +47,26 @@ export default function RegisterPage() {
     phoneNumber: '',
     height: '',
     weight: '',
-    physicalActivityLevel: '',
+    // Section 2: Mode de Vie
     smoking: '',
     alcoholConsumption: '',
     sleepHours: '',
+    practicesPhysicalActivity: '',
+    // Section 3: Physical Activity
+    physicalActivityType: '',
+    physicalActivityFrequency: '',
+    // Section 4: Eating Habits
     mealsPerDay: '',
-    chronicDiseases: [] as string[],
-    medicalTreatment: '',
-    allergiesIntolerances: [] as string[],
-    otherAllergies: '',
-    mainObjective: '',
-    otherObjective: '',
+    snacksBetweenMeals: '',
+    // Section 5: Diabete
+    isDiabetic: 'yes', // Default value for backward compatibility
+    diabetesType: '',
+    diabetesDuration: '',
+    diabeticTreatment: '',
+    associatedDiseases: [] as string[],
+    foodAllergiesIntolerances: [] as string[],
+    // Section 6: Objectives
+    objectives: [] as string[],
   });
 
   const handleBasicInfoSubmit = async (e: React.FormEvent) => {
@@ -105,7 +115,7 @@ export default function RegisterPage() {
     }));
   };
 
-  const handleCheckboxChange = (field: 'chronicDiseases' | 'allergiesIntolerances', value: string) => {
+  const handleCheckboxChange = (field: 'associatedDiseases' | 'foodAllergiesIntolerances' | 'objectives', value: string) => {
     setFormData((prev) => {
       const array = prev[field] as string[];
       if (array.includes(value)) {
@@ -127,27 +137,71 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
 
+    // Validate all required fields before submitting
+    const requiredFields = [
+      'fullName',
+      'dateOfBirth',
+      'gender',
+      'region',
+      'phoneNumber',
+      'height',
+      'weight',
+      'smoking',
+      'alcoholConsumption',
+      'practicesPhysicalActivity',
+      'mealsPerDay',
+      'snacksBetweenMeals',
+      'diabetesType',
+      'diabetesDuration',
+      'diabeticTreatment',
+    ];
+
+    const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
+    if (missingFields.length > 0) {
+      setError(`Veuillez compléter tous les champs requis: ${missingFields.join(', ')}`);
+      setLoading(false);
+      return;
+    }
+
     try {
+      const submitData = {
+        ...formData,
+        userId,
+        userEmail: email,
+      };
+      
+      console.log('Submitting assessment data:', submitData);
+
       const res = await fetch('/api/assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          userId,
-          userEmail: email,
-        }),
+        body: JSON.stringify(submitData),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(typeof data.error === 'string' ? data.error : t('common.errorOccurred'));
+        
+        // Handle Zod validation errors
+        if (Array.isArray(data.error)) {
+          const errorMessages = data.error
+            .map((err: any) => err.message || 'Validation error')
+            .join(', ');
+          throw new Error(errorMessages);
+        } else if (typeof data.error === 'string') {
+          throw new Error(data.error);
+        } else if (typeof data.error === 'object') {
+          throw new Error(JSON.stringify(data.error));
+        } else {
+          throw new Error(t('common.errorOccurred'));
+        }
       }
 
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+      // Redirect directly to dashboard after successful registration
+      router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.errorOccurred'));
+      const errorMsg = err instanceof Error ? err.message : t('common.errorOccurred');
+      setError(errorMsg);
+      console.error('Assessment submission error:', err);
     } finally {
       setLoading(false);
     }
@@ -182,7 +236,7 @@ export default function RegisterPage() {
                 quality={95}
               />
             ) : (
-              <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">{t('common.appName')}</h1>
             )}
             <p className="text-gray-600 text-sm sm:text-base">{t('common.educationalPlatform')}</p>
             <p className="text-gray-500 text-xs sm:text-sm mt-2">{t('auth.stepText')} 1 {t('auth.ofText')} 2</p>
@@ -282,7 +336,7 @@ export default function RegisterPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-600 mb-2">NutriÉd</h1>
+          <h1 className="text-4xl font-bold text-indigo-600 mb-2">{t('common.appName')}</h1>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('auth.assessmentForm')}</h2>
           <p className="text-gray-600 mb-6">
             {t('auth.assessmentFormDesc')}
@@ -311,16 +365,14 @@ export default function RegisterPage() {
         )}
 
         <form onSubmit={currentStep === 7 ? handleAssessmentSubmit : (e) => { e.preventDefault(); goToNextStep(); }} className="space-y-6">
-          {/* Section 2: General Information */}
+          {/* Section 1: Identification */}
           {currentStep === 2 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.personalInfo')}</h3>
-              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 1 de 6: Identification</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.fullName')} <span className="text-red-500">{t('auth.required')}</span>
+                  Identifiant <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -329,14 +381,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder={t('auth.namePlaceholder')}
+                  placeholder="Votre nom complet"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.dateOfBirth')} <span className="text-red-500">{t('auth.required')}</span>
+                    Date de Naissance <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -350,7 +402,7 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.gender')} <span className="text-red-500">{t('auth.required')}</span>
+                    Sexe <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="gender"
@@ -359,10 +411,9 @@ export default function RegisterPage() {
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                   >
-                    <option value="">{t('auth.selectOption')}</option>
-                    <option value="male">{t('auth.male')}</option>
-                    <option value="female">{t('auth.female')}</option>
-                    <option value="other">{t('auth.other')}</option>
+                    <option value="">Sélectionner</option>
+                    <option value="homme">Homme</option>
+                    <option value="femme">Femme</option>
                   </select>
                 </div>
               </div>
@@ -370,7 +421,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.region')} <span className="text-red-500">{t('auth.required')}</span>
+                    Région <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -379,21 +430,22 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder={t('auth.emailPlaceholder')}
+                    placeholder="ex: Casablanca"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.phoneNumber')}
+                    Numéro de téléphone <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     name="phoneNumber"
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
+                    required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder={t('auth.emailPlaceholder')}
+                    placeholder="Votre numéro"
                   />
                 </div>
               </div>
@@ -401,7 +453,7 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.height')} <span className="text-red-500">{t('auth.required')}</span>
+                    Taille (cm) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -410,13 +462,13 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder={t('auth.heightPlaceholder')}
+                    placeholder="170"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.weight')} <span className="text-red-500">{t('auth.required')}</span>
+                    Poids (kg) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -425,142 +477,179 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder={t('auth.weightPlaceholder')}
+                    placeholder="75"
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 2: Mode de Vie */}
+          {currentStep === 3 && (
+            <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 2 de 6: Mode de Vie</h3>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Fumez-vous? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {['yes', 'no'].map((value) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="smoking"
+                        value={value}
+                        checked={formData.smoking === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{value === 'yes' ? 'Oui' : 'Non'}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Consommez-vous de l'alcool? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {['yes', 'no'].map((value) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="alcoholConsumption"
+                        value={value}
+                        checked={formData.alcoholConsumption === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{value === 'yes' ? 'Oui' : 'Non'}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.physicalActivityLevel')} <span className="text-red-500">{t('auth.required')}</span>
-                </label>
-                <select
-                  name="physicalActivityLevel"
-                  value={formData.physicalActivityLevel}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                >
-                  <option value="">{t('auth.selectOption')}</option>
-                  <option value="sedentary">{t('auth.sedentary')}</option>
-                  <option value="moderate">{t('auth.moderate')}</option>
-                  <option value="active">{t('auth.active')}</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Section 3: Lifestyle */}
-          {currentStep === 3 && (
-            <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.lifestyle')}</h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.smoking')} <span className="text-red-500">{t('auth.required')}</span>
-                </label>
-                <select
-                  name="smoking"
-                  value={formData.smoking}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                >
-                  <option value="">{t('auth.selectOption')}</option>
-                  <option value="never">{t('auth.never')}</option>
-                  <option value="former">{t('auth.formerSmoker')}</option>
-                  <option value="current">{t('auth.currentSmoker')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.alcoholConsumption')} <span className="text-red-500">{t('auth.required')}</span>
-                </label>
-                <select
-                  name="alcoholConsumption"
-                  value={formData.alcoholConsumption}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                >
-                  <option value="">{t('auth.selectOption')}</option>
-                  <option value="never">{t('auth.never')}</option>
-                  <option value="occasional">{t('auth.occasional')}</option>
-                  <option value="regular">{t('auth.regular')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.sleepHours')} <span className="text-red-500">{t('auth.required')}</span>
+                  Nombre d'heures de sommeil par nuit
                 </label>
                 <input
                   type="number"
                   name="sleepHours"
                   value={formData.sleepHours}
                   onChange={handleInputChange}
-                  required
                   min="0"
                   max="24"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder={t('auth.sleepHoursPlaceholder')}
+                  placeholder="7"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Pratiquez-vous une activité physique? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {['yes', 'no'].map((value) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="practicesPhysicalActivity"
+                        value={value}
+                        checked={formData.practicesPhysicalActivity === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{value === 'yes' ? 'Oui' : 'Non'}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Section 4: Eating Habits */}
+          {/* Section 3: Type d'activité physique */}
           {currentStep === 4 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.eatingHabits')}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 3 de 6: Type d'Activité Physique</h3>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.mealsPerDay')} <span className="text-red-500">{t('auth.required')}</span>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Type d'activité physique <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="mealsPerDay"
-                  value={formData.mealsPerDay}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                >
-                  <option value="">{t('auth.selectOption')}</option>
-                  <option value="1">1 {t('auth.mealsPerDay')}</option>
-                  <option value="2">2 {t('auth.mealsPerDay')}</option>
-                  <option value="3">3 {t('auth.mealsPerDay')}</option>
-                  <option value="4">4 {t('auth.mealsPerDay')}</option>
-                  <option value="5">5+ {t('auth.mealsPerDay')}</option>
-                </select>
+                <div className="space-y-2">
+                  {[
+                    { value: 'marche', label: 'Marche' },
+                    { value: 'sport', label: 'Sport' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="physicalActivityType"
+                        value={value}
+                        checked={formData.physicalActivityType === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Fréquence
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: '1-2fois', label: '1-2 fois/semaine' },
+                    { value: '3-4fois', label: '≥ 3 fois/semaine' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="physicalActivityFrequency"
+                        value={value}
+                        checked={formData.physicalActivityFrequency === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* Section 5: Health Status */}
+          {/* Section 4: Habitudes Alimentaires */}
           {currentStep === 5 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.healthStatus')}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 4 de 6: Habitudes Alimentaires</h3>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  {t('auth.chronicDiseases')}
+                  Nombre de repas par jour <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   {[
-                    { key: 'diabetes', label: t('auth.diabetes') },
-                    { key: 'hypertension', label: t('auth.hypertension') },
-                    { key: 'heart', label: t('auth.heartDisease') },
-                    { key: 'obesity', label: t('auth.obesity') },
-                    { key: 'none', label: t('auth.none') }
-                  ].map(({ key, label }) => (
-                    <label key={key} className="flex items-center">
+                    { value: '1', label: '1 repas' },
+                    { value: '2', label: '2 repas' },
+                    { value: '3', label: '3 repas' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
                       <input
-                        type="checkbox"
-                        value={key}
-                        checked={formData.chronicDiseases.includes(key)}
-                        onChange={() => handleCheckboxChange('chronicDiseases', key)}
-                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                        type="radio"
+                        name="mealsPerDay"
+                        value={value}
+                        checked={formData.mealsPerDay === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
                       />
                       <span className="ml-2 text-gray-700">{label}</span>
                     </label>
@@ -569,102 +658,202 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.medicalTreatment')}
-                </label>
-                <textarea
-                  name="medicalTreatment"
-                  value={formData.medicalTreatment}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder={t('auth.medicalTreatmentPlaceholder')}
-                  rows={3}
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  {t('auth.allergiesAndIntolerances')}
+                  Prenez-vous des collations entre les repas? <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   {[
-                    { key: 'peanuts', label: t('auth.peanuts') },
-                    { key: 'nuts', label: t('auth.nuts') },
-                    { key: 'seafood', label: t('auth.seafood') },
-                    { key: 'dairy', label: t('auth.dairy') },
-                    { key: 'gluten', label: t('auth.gluten') },
-                    { key: 'eggs', label: t('auth.eggs') },
-                    { key: 'other', label: t('auth.other') }
-                  ].map(({ key, label }) => (
-                    <label key={key} className="flex items-center">
+                    { value: 'regulierement', label: 'Oui, régulièrement' },
+                    { value: 'occasionnellement', label: 'Oui, occasionnellement' },
+                    { value: 'non', label: 'Non' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
                       <input
-                        type="checkbox"
-                        value={key}
-                        checked={formData.allergiesIntolerances.includes(key)}
-                        onChange={() => handleCheckboxChange('allergiesIntolerances', key)}
-                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+                        type="radio"
+                        name="snacksBetweenMeals"
+                        value={value}
+                        checked={formData.snacksBetweenMeals === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
                       />
                       <span className="ml-2 text-gray-700">{label}</span>
                     </label>
                   ))}
                 </div>
               </div>
-
-              {formData.allergiesIntolerances.includes('other') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('auth.pleaseSpecify')}
-                  </label>
-                  <input
-                    type="text"
-                    name="otherAllergies"
-                    value={formData.otherAllergies}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder={t('auth.otherAllergiesPlaceholder')}
-                  />
-                </div>
-              )}
             </div>
           )}
 
-          {/* Section 6: Nutritional Objectives */}
+          {/* Section 5: Patient Diabétique */}
           {currentStep === 6 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.nutritionalObjectives')}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 5 de 6: Patient Diabétique</h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.mainObjective')} <span className="text-red-500">{t('auth.required')}</span>
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Quel est votre type de diabète? <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="mainObjective"
-                  value={formData.mainObjective}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                >
-                  <option value="">{t('auth.selectOption')}</option>
-                  <option value="weight-loss">{t('auth.weightLoss')}</option>
-                  <option value="weight-gain">{t('auth.weightGain')}</option>
-                  <option value="muscle-gain">{t('auth.muscleMass')}</option>
-                  <option value="health-improvement">{t('auth.healthImprovement')}</option>
-                  <option value="performance">{t('auth.performance')}</option>
-                </select>
+                <div className="space-y-2">
+                  {[
+                    { value: 'type1', label: 'Diabète de type 1' },
+                    { value: 'type2', label: 'Diabète de type 2' },
+                    { value: 'gestationnel', label: 'Gestationnel (femme enceinte)' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="diabetesType"
+                        value={value}
+                        checked={formData.diabetesType === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-red-600"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.otherObjectives')}
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Depuis quand? <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  name="otherObjective"
-                  value={formData.otherObjective}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder={t('auth.otherObjectivesPlaceholder')}
-                  rows={4}
-                />
+                <div className="space-y-2">
+                  {[
+                    { value: 'moins1an', label: '< 1 an' },
+                    { value: '1-5ans', label: '1-5 ans' },
+                    { value: 'plus5ans', label: '> 5 ans' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="diabetesDuration"
+                        value={value}
+                        checked={formData.diabetesDuration === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Quel est votre traitement antidiabétique actuel? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'insuline_basale', label: 'Insuline basale' },
+                    { value: 'insuline_rapide', label: 'Insuline rapide' },
+                    { value: 'oraux', label: 'Antidiabétiques oraux' },
+                    { value: 'regime', label: 'Régime alimentaire équilibré seul' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="diabeticTreatment"
+                        value={value}
+                        checked={formData.diabeticTreatment === value}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 text-indigo-600"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Avez-vous d'autres maladies associées? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'coaliaque', label: 'Maladie cœliaque' },
+                    { value: 'cardiovasculaire', label: 'Maladie cardiovasculaire' },
+                    { value: 'hta', label: 'Hypertension artérielle' },
+                    { value: 'dyslipidemia', label: 'Dyslipidémie' },
+                    { value: 'endocrinienne', label: 'Maladies endocriniennes et hormonales' },
+                    { value: 'obesity', label: 'Obésité' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={value}
+                        checked={formData.associatedDiseases.includes(value)}
+                        onChange={() => handleCheckboxChange('associatedDiseases', value)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Avez-vous une allergie ou intolérance alimentaire? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'gluten', label: 'Gluten' },
+                    { value: 'lactose', label: 'Lactose' },
+                    { value: 'eggs', label: 'Œufs' },
+                    { value: 'aucune', label: 'Aucune' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={value}
+                        checked={formData.foodAllergiesIntolerances.includes(value)}
+                        onChange={() => handleCheckboxChange('foodAllergiesIntolerances', value)}
+                        className="w-4 h-4 text-orange-600 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section 6: Objectifs et Motivation */}
+          {currentStep === 7 && (
+            <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Section 6 de 6: Objectifs et Motivation</h3>
+
+              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Quels sont vos objectifs en intégrant le programme Nutri Ed? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'glycemie', label: 'Mieux contrôler la glycémie' },
+                    { value: 'lien_alimentation', label: 'Mieux comprendre le lien entre alimentation et diabète' },
+                    { value: 'doses_insuline', label: 'Adapter les doses d\'insuline en fonction des repas' },
+                    { value: 'prevenir_complications', label: 'Prévenir les complications liées au diabète' },
+                    { value: 'autonomie', label: 'Renforcer l\'autonomie dans la gestion de la maladie' },
+                    { value: 'motivation', label: 'Renforcer la motivation et l\'engagement' },
+                    { value: 'autre', label: 'Autre' }
+                  ].map(({ value, label }) => (
+                    <label key={value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={value}
+                        checked={formData.objectives.includes(value)}
+                        onChange={() => handleCheckboxChange('objectives', value)}
+                        className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                      />
+                      <span className="ml-2 text-gray-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -686,7 +875,7 @@ export default function RegisterPage() {
               disabled={loading}
               className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg transition"
             >
-              {loading ? t('auth.processing') : currentStep === 6 ? t('auth.finish') : t('auth.next')}
+              {loading ? t('auth.processing') : currentStep === 7 ? t('auth.finish') : t('auth.next')}
             </button>
           </div>
         </form>

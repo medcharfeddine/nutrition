@@ -47,6 +47,21 @@ export default function ResourcesPage() {
     }
   };
 
+  // Helper function to convert category slug to translation key
+  const getCategoryLabel = (slug: string): string => {
+    const categoryTranslationMap: { [key: string]: string } = {
+      'nutrition-basics': 'categories.nutritionBasics',
+      'meal-planning': 'categories.mealPlanning',
+      'weight-management': 'categories.weightManagement',
+      'healthy-eating': 'categories.healthyEating',
+      'fitness': 'categories.fitness',
+      'mindfulness': 'categories.mindfulness',
+    };
+    
+    const translationKey = categoryTranslationMap[slug];
+    return translationKey ? t(translationKey) : slug;
+  };
+
   const fetchCategories = async () => {
     try {
       const res = await fetch('/api/admin/categories');
@@ -57,7 +72,7 @@ export default function ResourcesPage() {
           { value: 'all', label: t('resources.allResources') },
           ...data.categories.map((cat: any) => ({
             value: cat.slug,
-            label: cat.name,
+            label: getCategoryLabel(cat.slug),
           })),
         ];
         setCategories(formattedCategories);
@@ -67,12 +82,12 @@ export default function ResourcesPage() {
       // Fallback to default categories if fetch fails
       const defaultCategories = [
         { value: 'all', label: t('resources.allResources') },
-        { value: 'nutrition-basics', label: 'Bases de la Nutrition' },
-        { value: 'meal-planning', label: 'Planification des Repas' },
-        { value: 'weight-management', label: 'Gestion du Poids' },
-        { value: 'healthy-eating', label: 'Alimentation Saine' },
-        { value: 'fitness', label: 'Forme Physique' },
-        { value: 'mindfulness', label: 'Pleine Conscience' },
+        { value: 'nutrition-basics', label: t('categories.nutritionBasics') },
+        { value: 'meal-planning', label: t('categories.mealPlanning') },
+        { value: 'weight-management', label: t('categories.weightManagement') },
+        { value: 'healthy-eating', label: t('categories.healthyEating') },
+        { value: 'fitness', label: t('categories.fitness') },
+        { value: 'mindfulness', label: t('categories.mindfulness') },
       ];
       setCategories(defaultCategories);
     }
@@ -160,7 +175,7 @@ export default function ResourcesPage() {
                     quality={95}
                   />
                 ) : (
-                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriEd</h1>
+                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{t('common.appName')}</h1>
                 )}
               </Link>
               <div className="hidden md:flex gap-2 lg:gap-6">
@@ -168,19 +183,19 @@ export default function ResourcesPage() {
                   href="/dashboard"
                   className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Tableau de Bord
+                  {t('resources.dashboard')}
                 </Link>
                 <Link
                   href="/resources"
                   className="text-indigo-600 font-medium border-b-2 border-indigo-600 text-sm md:text-base"
                 >
-                  Ressources
+                  {t('resources.resources')}
                 </Link>
                 <Link
                   href="/profile"
                   className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
                 >
-                  Profil
+                  {t('resources.profile')}
                 </Link>
               </div>
             </div>
@@ -190,7 +205,7 @@ export default function ResourcesPage() {
               <button
                 onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                 className="md:hidden text-gray-600 hover:text-indigo-600 text-lg"
-                title="Rechercher"
+                title={t('resources.searchLabel')}
               >
                 🔍
               </button>
@@ -222,35 +237,35 @@ export default function ResourcesPage() {
                 className="block px-3 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                📊 Tableau de Bord
+                📊 {t('resources.dashboard')}
               </Link>
               <Link
                 href="/resources"
                 className="block px-3 py-2 text-indigo-600 bg-indigo-50 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                📚 Ressources
+                📚 {t('resources.resources')}
               </Link>
               <Link
                 href="/profile"
                 className="block px-3 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                👤 Profil
+                👤 {t('resources.profile')}
               </Link>
               <Link
                 href="/consultation-request"
                 className="block px-3 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                💬 Consultation
+                💬 {t('resources.consultation')}
               </Link>
               <Link
                 href="/appointments"
                 className="block px-3 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                📅 Rendez-vous
+                📅 {t('resources.appointments')}
               </Link>
             </div>
           )}
@@ -275,7 +290,7 @@ export default function ResourcesPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-3 sm:mb-4">{t('resources.resourcesHeader')}</h1>
           <p className="text-sm sm:text-base md:text-lg opacity-90 max-w-2xl">
-            Découvrez des conseils nutritionnels d'experts, des guides de planification des repas et des informations sur la santé pour atteindre vos objectifs
+            {t('resources.heroDescription')}
           </p>
         </div>
       </section>
@@ -306,9 +321,9 @@ export default function ResourcesPage() {
                     <p className="text-gray-500 text-xs sm:text-sm">{selectedPost.category}</p>
                   </div>
                   <span className="ml-auto sm:ml-auto px-3 sm:px-4 py-1 sm:py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-full text-xs sm:text-sm">
-                    {selectedPost.type === 'video' && '📹 Vidéo'}
-                    {selectedPost.type === 'post' && '📝 Article'}
-                    {selectedPost.type === 'infographic' && '📊 Infographie'}
+                    {selectedPost.type === 'video' && `📹 ${t('resources.video')}`}
+                    {selectedPost.type === 'post' && `📝 ${t('resources.article')}`}
+                    {selectedPost.type === 'infographic' && `📊 ${t('resources.infographic')}`}
                   </span>
                 </div>
               </div>
@@ -352,7 +367,7 @@ export default function ResourcesPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">❤️</span>
                     <div>
-                      <p className="text-sm text-gray-500">J'aime</p>
+                      <p className="text-sm text-gray-500">{t('resources.like')}</p>
                       <p className="font-bold text-gray-900 text-xl">{likeCount[selectedPost._id] || 0}</p>
                     </div>
                   </div>
@@ -360,14 +375,14 @@ export default function ResourcesPage() {
 
                 {/* Description */}
                 <div className="mb-6 sm:mb-8">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">À propos</h2>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">{t('resources.about')}</h2>
                   <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{selectedPost.description}</p>
                 </div>
 
                 {/* Full Content */}
                 {selectedPost.content && (
                   <div className="mb-6 sm:mb-8">
-                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">Contenu</h2>
+                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">{t('resources.content')}</h2>
                     <div className="bg-gray-50 rounded-lg p-4 sm:p-6 text-gray-700 leading-relaxed text-sm sm:text-base">
                       {selectedPost.content.split('\n').map((line: string, idx: number) => {
                         // Check if line is an image markdown
@@ -398,7 +413,7 @@ export default function ResourcesPage() {
                 {/* Hashtags */}
                 {selectedPost.tags && selectedPost.tags.length > 0 && (
                   <div className="mb-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">Tags</h2>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">{t('resources.tags')}</h2>
                     <div className="flex flex-wrap gap-3">
                       {selectedPost.tags.map((tag: string) => (
                         <span
@@ -423,7 +438,7 @@ export default function ResourcesPage() {
                     }}
                   >
                     <span className="text-2xl">{likes[selectedPost._id] ? '❤️' : '🤍'}</span>
-                    {likes[selectedPost._id] ? 'Aimé' : 'J\'aime'}
+                    {likes[selectedPost._id] ? t('resources.liked') : t('resources.like')}
                   </button>
                 </div>
               </div>
@@ -435,7 +450,7 @@ export default function ResourcesPage() {
             <div className="bg-white rounded-lg shadow-md p-6 mb-12">
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Recherche
+              {t('resources.searchLabel')}
             </label>
             <input
               type="text"
@@ -448,7 +463,7 @@ export default function ResourcesPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Filtrer par Catégorie
+              {t('resources.filterByCategory')}
             </label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
@@ -478,7 +493,7 @@ export default function ResourcesPage() {
           <>
             <div className="mb-6">
               <p className="text-gray-600">
-                <span className="font-bold text-indigo-600">{filteredContents.length}</span> ressource{filteredContents.length !== 1 ? 's' : ''} trouvée{filteredContents.length !== 1 ? 's' : ''}
+                <span className="font-bold text-indigo-600">{filteredContents.length}</span> {filteredContents.length !== 1 ? t('resources.resourcesFoundPlural') : t('resources.resourcesFound')} {filteredContents.length !== 1 ? t('resources.foundLabelPlural') : t('resources.foundLabel')}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
@@ -499,7 +514,7 @@ export default function ResourcesPage() {
                       </div>
                     </div>
                     <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      {content.type === 'video' ? 'Vidéo' : content.type === 'post' ? 'Article' : 'Infographie'}
+                      {content.type === 'video' ? t('resources.video') : content.type === 'post' ? t('resources.article') : t('resources.infographic')}
                     </span>
                   </div>
 
@@ -568,7 +583,7 @@ export default function ResourcesPage() {
                           className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition group ml-auto"
                         >
                           <span className="group-hover:scale-125 transition">👁️</span>
-                          <span className="text-sm">Voir</span>
+                          <span className="text-sm">{t('resources.view')}</span>
                         </button>
                       </div>
                     </div>

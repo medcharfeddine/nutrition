@@ -4,24 +4,41 @@ export interface IAssessment extends Document {
   userId: string;
   userName: string;
   userEmail: string;
+  
+  // Section 1: Identification
   fullName: string;
   dateOfBirth: string;
   gender: string;
   region: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   height: string;
   weight: string;
-  physicalActivityLevel: string;
+  
+  // Section 2: Mode de Vie
   smoking: string;
   alcoholConsumption: string;
-  sleepHours: string;
+  sleepHours?: string;
+  practicesPhysicalActivity: string;
+  
+  // Section 3: Physical Activity
+  physicalActivityType?: string;
+  physicalActivityFrequency?: string;
+  
+  // Section 4: Eating Habits
   mealsPerDay: string;
-  chronicDiseases?: string[];
-  medicalTreatment: string;
-  allergiesIntolerances?: string[];
-  otherAllergies?: string;
-  mainObjective: string;
-  otherObjective?: string;
+  snacksBetweenMeals: string;
+  
+  // Section 5: Diabetes Management
+  diabetesType: string;
+  diabetesDuration: string;
+  diabeticTreatment: string;
+  isDiabetic?: string; // Legacy field - kept for backward compatibility
+  associatedDiseases?: string[];
+  foodAllergiesIntolerances?: string[];
+  
+  // Section 6: Objectives
+  objectives?: string[];
+  
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,6 +58,7 @@ const AssessmentSchema: Schema<IAssessment> = new Schema(
       type: String,
       required: true,
     },
+    // Section 1: Identification
     fullName: {
       type: String,
       required: true,
@@ -57,7 +75,10 @@ const AssessmentSchema: Schema<IAssessment> = new Schema(
       type: String,
       required: true,
     },
-    phoneNumber: String,
+    phoneNumber: {
+      type: String,
+      required: true,
+    },
     height: {
       type: String,
       required: true,
@@ -66,10 +87,7 @@ const AssessmentSchema: Schema<IAssessment> = new Schema(
       type: String,
       required: true,
     },
-    physicalActivityLevel: {
-      type: String,
-      required: true,
-    },
+    // Section 2: Mode de Vie
     smoking: {
       type: String,
       required: true,
@@ -78,26 +96,44 @@ const AssessmentSchema: Schema<IAssessment> = new Schema(
       type: String,
       required: true,
     },
-    sleepHours: {
+    sleepHours: String,
+    practicesPhysicalActivity: {
       type: String,
       required: true,
     },
+    // Section 3: Physical Activity
+    physicalActivityType: String,
+    physicalActivityFrequency: String,
+    // Section 4: Eating Habits
     mealsPerDay: {
       type: String,
       required: true,
     },
-    chronicDiseases: [String],
-    medicalTreatment: {
+    snacksBetweenMeals: {
       type: String,
       required: true,
     },
-    allergiesIntolerances: [String],
-    otherAllergies: String,
-    mainObjective: {
+    // Section 5: Diabetes Management
+    diabetesType: {
       type: String,
       required: true,
     },
-    otherObjective: String,
+    diabetesDuration: {
+      type: String,
+      required: true,
+    },
+    diabeticTreatment: {
+      type: String,
+      required: true,
+    },
+    isDiabetic: {
+      type: String,
+      default: 'yes', // Default to 'yes' for backward compatibility
+    },
+    associatedDiseases: [String],
+    foodAllergiesIntolerances: [String],
+    // Section 6: Objectives
+    objectives: [String],
   },
   {
     timestamps: true,

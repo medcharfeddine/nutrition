@@ -130,11 +130,11 @@ export default function AppointmentsPage() {
     e.preventDefault();
 
     if (!selectedSpecialist || !selectedDate || !selectedSlot) {
-      setErrorMessage('Please select a specialist, date, and time');
+      setErrorMessage(t('appointments.pleaseSelectSpecialistDateTime'));
       addNotification({
         type: 'warning',
-        title: 'Sélection Incomplète',
-        message: 'Veuillez sélectionner un spécialiste, une date et une heure.',
+        title: t('appointments.incompleteSelection'),
+        message: t('appointments.pleaseSelectSpecialistDateTime'),
         duration: 4000,
       });
       return;
@@ -166,7 +166,7 @@ export default function AppointmentsPage() {
 
       if (res.ok) {
         setSuccessMessage(
-          'Appointment request sent! Awaiting specialist confirmation.'
+          t('appointments.appointmentRequestSent')
         );
         setSelectedSpecialist('');
         setSelectedDate('');
@@ -179,31 +179,31 @@ export default function AppointmentsPage() {
         // Show success notification
         addNotification({
           type: 'success',
-          title: 'Rendez-vous Réservé',
-          message: 'Votre demande de rendez-vous a été envoyée avec succès. En attente de confirmation du spécialiste.',
+          title: t('appointments.appointmentConfirmed'),
+          message: t('appointments.appointmentConfirmedDesc'),
           duration: 5000,
         });
       } else {
         const error = await res.json();
-        setErrorMessage(error.error || 'Failed to book appointment');
+        setErrorMessage(error.error || t('appointments.failedToBookAppointment'));
         
         // Show error notification
         addNotification({
           type: 'error',
-          title: 'Erreur',
-          message: error.error || 'Impossible de réserver le rendez-vous. Veuillez réessayer.',
+          title: t('appointments.appointmentError'),
+          message: error.error || t('appointments.failedToBookAppointment'),
           duration: 4000,
         });
       }
     } catch (error) {
-      setErrorMessage('An error occurred. Please try again.');
+      setErrorMessage(t('appointments.errorOccurred'));
       console.error('Failed to book appointment:', error);
       
       // Show error notification
       addNotification({
         type: 'error',
-        title: 'Erreur de Connexion',
-        message: 'Une erreur est survenue lors de la réservation du rendez-vous.',
+        title: t('appointments.appointmentError'),
+        message: t('appointments.errorOccurred'),
         duration: 4000,
       });
     } finally {
@@ -258,25 +258,25 @@ export default function AppointmentsPage() {
                 href="/dashboard"
                 className="text-gray-700 hover:text-indigo-600 font-medium"
               >
-                Dashboard
+                {t('appointments.dashboard')}
               </Link>
               <Link
                 href="/messages"
                 className="text-gray-700 hover:text-indigo-600 font-medium"
               >
-                Messages
+                {t('appointments.messages')}
               </Link>
               <Link
                 href="/consultation-request"
                 className="text-gray-700 hover:text-indigo-600 font-medium"
               >
-                Consultation
+                {t('appointments.consultation')}
               </Link>
               <Link
                 href="/profile"
                 className="text-gray-700 hover:text-indigo-600 font-medium"
               >
-                Profile
+                {t('appointments.profile')}
               </Link>
               <span className="text-sm text-gray-600">{session.user?.name}</span>
               <button
@@ -304,7 +304,7 @@ export default function AppointmentsPage() {
                     : 'text-gray-700 hover:text-indigo-600'
                 }`}
               >
-                My Appointments ({appointments.length})
+                {t('appointments.myAppointments')} ({appointments.length})
               </button>
               <button
                 onClick={() => setActiveTab('book')}
@@ -314,7 +314,7 @@ export default function AppointmentsPage() {
                     : 'text-gray-700 hover:text-indigo-600'
                 }`}
               >
-                Book Appointment
+                {t('appointments.bookNewAppointment')}
               </button>
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function AppointmentsPage() {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    My Appointments
+                    {t('appointments.myAppointments')}
                   </h2>
                   <div className="flex gap-2">
                     {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(
@@ -340,7 +340,7 @@ export default function AppointmentsPage() {
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         >
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                          {t(`appointments.${status}`)}
                         </button>
                       )
                     )}
@@ -349,16 +349,16 @@ export default function AppointmentsPage() {
 
                 {loading ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">Loading...</p>
+                    <p className="text-gray-600">{t('common.loading')}</p>
                   </div>
                 ) : appointments.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-600 mb-4">No appointments found</p>
+                    <p className="text-gray-600 mb-4">{t('appointments.noAppointmentsFound')}</p>
                     <button
                       onClick={() => setActiveTab('book')}
                       className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold"
                     >
-                      Book an Appointment
+                      {t('appointments.bookAnAppointment')}
                     </button>
                   </div>
                 ) : (
@@ -383,14 +383,14 @@ export default function AppointmentsPage() {
                                   day: 'numeric',
                                 }
                               )}{' '}
-                              at {apt.startTime}
+                              {t('appointments.at')} {apt.startTime}
                             </p>
                             <p className="text-sm text-gray-600 mt-1">
-                              Type: {apt.consultationType}
+                              {t('appointments.appointmentType')} {apt.consultationType}
                             </p>
                             {apt.notes && (
                               <p className="text-sm text-gray-600 mt-2">
-                                Notes: {apt.notes}
+                                {t('appointments.appointmentNotes')} {apt.notes}
                               </p>
                             )}
                             {apt.meetingLink && (
@@ -436,7 +436,7 @@ export default function AppointmentsPage() {
             {activeTab === 'book' && (
               <div className="max-w-2xl">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                  Book an Appointment
+                  {t('appointments.bookNewAppointment')}
                 </h2>
 
                 {successMessage && (

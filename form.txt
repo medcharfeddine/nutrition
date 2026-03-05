@@ -1,0 +1,104 @@
+Section 1 of 7
+
+identifiant *
+Date de Naissance *
+Sexe *
+    homme
+    Femme
+Région *
+numéro de téléphone *
+taille (cm) *
+poids (kg) *
+
+
+
+Section 2 
+mode de vie 
+
+fumez-vous *
+    oui
+    non
+consommez -vous de d'alcool ?*
+    oui
+    non
+nombre d'heures de sommeil par nuit 
+pratiquez -vous une activité physique ?*
+
+Section 3
+
+
+type  d'activité physique *
+    marche
+    sport
+    Other:
+
+fréquence 
+    1-2 fois/semaine
+    >= 3 fois /semaine
+
+Section 4
+
+habitudes alimentaires 
+
+
+nombre de repas par jour *
+    1 repas
+    2 repas
+    3 repas
+    Other:
+
+prenez-vous des collations entre les repas ?*
+    oui , régulièrement
+    oui , occasionnellement
+    non
+
+Section 5
+patient diabétique 
+
+
+Quel est votre type de diabète   ?*
+    Diabète de type 1
+    Diabète de type 2
+    gestationnel ( femme enceinte)
+
+depuis quand ?*
+    <1 an
+    1-5 ans
+    > 5 ans
+    Other:
+
+Quel est votre traitement antidiabétique actuel ?*
+    insuline basale
+    insuline rapide
+    antidiabétiques oraux
+    régime alimentaire  équilibré seul
+    Other:
+
+avez vous d'autres maladies associées ? *
+    maladie coaliaque
+    maladie cardiovasculaire
+    hypertension artérielle
+    dyslipidémie
+    maladie endocriniennes et hormonales (sopk ,dysthyroidie ..)
+    obésité
+    Other:
+
+avez-vous une allérgies ou intolérances alimentaires ?*
+    gluten
+    lactose
+    oeufs
+    aucune
+    autre:
+
+Section 6
+objectifs et motivation 
+
+ 
+quels sont vos objectifs en intégrant le programme Nutri Ed *
+    mieux contrôler la glycémie
+    mieux comprendre le lien entre alimentation et diabéte
+    adapter les doses d'insuline en fonction des repas
+    prévenir les complication liées au diabéte
+    renforcer l'autonomie dans la gestion de la maladie
+    renforcer la motivation et l'engagement
+    Other:

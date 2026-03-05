@@ -114,7 +114,7 @@ export default function DashboardPage() {
                   priority
                 />
               ) : (
-                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriÉd</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{t('common.appName')}</h1>
               )}
             </Link>
             <div className="hidden md:flex gap-4 md:gap-6">

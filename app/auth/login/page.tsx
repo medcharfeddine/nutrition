@@ -77,7 +77,7 @@ export default function LoginPage() {
               quality={95}
             />
           ) : (
-            <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">NutriEd</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-indigo-600 mb-2">{t('common.appName')}</h1>
           )}
           <p className="text-gray-600 text-sm sm:text-base">{t('common.educationalPlatform')}</p>
         </div>

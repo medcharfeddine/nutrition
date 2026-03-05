@@ -6,24 +6,39 @@ import Assessment from '@/models/Assessment';
 import { z } from 'zod';
 
 const assessmentSchema = z.object({
+  // Section 1: Identification
   fullName: z.string().min(2, 'Le nom doit contenir au moins 2 caracteres'),
-  dateOfBirth: z.string(),
+  dateOfBirth: z.string().min(1, 'La date de naissance est requise'),
   gender: z.string().min(1, 'Le sexe est requis'),
   region: z.string().min(1, 'La région est requise'),
-  phoneNumber: z.string().optional(),
+  phoneNumber: z.string().min(1, 'Le téléphone est requis'),
   height: z.string().min(1, 'La taille est requise'),
   weight: z.string().min(1, 'Le poids est requis'),
-  physicalActivityLevel: z.string().min(1, 'Le niveau d\'activité est requis'),
-  smoking: z.string().min(1, 'Veuillez repondre'),
-  alcoholConsumption: z.string().min(1, 'Veuillez repondre'),
-  sleepHours: z.string().min(1, 'Veuillez repondre'),
-  mealsPerDay: z.string().min(1, 'Veuillez repondre'),
-  chronicDiseases: z.array(z.string()).optional(),
-  medicalTreatment: z.string().optional(),
-  allergiesIntolerances: z.array(z.string()).optional(),
-  otherAllergies: z.string().optional(),
-  mainObjective: z.string().optional(),
-  otherObjective: z.string().optional(),
+
+  // Section 2: Mode de Vie
+  smoking: z.string().min(1, 'Veuillez répondre à la question sur le tabac'),
+  alcoholConsumption: z.string().min(1, 'Veuillez répondre à la question sur l\'alcool'),
+  sleepHours: z.string().optional(),
+  practicesPhysicalActivity: z.string().min(1, 'Veuillez répondre'),
+
+  // Section 3: Activity Type
+  physicalActivityType: z.string().optional(),
+  physicalActivityFrequency: z.string().optional(),
+
+  // Section 4: Eating Habits
+  mealsPerDay: z.string().min(1, 'Le nombre de repas est requis'),
+  snacksBetweenMeals: z.string().min(1, 'Veuillez répondre'),
+
+  // Section 5: Diabetes
+  isDiabetic: z.string().default('yes'), // Legacy field - backward compatibility
+  diabetesType: z.string().min(1, 'Le type de diabète est requis'),
+  diabetesDuration: z.string().min(1, 'La durée du diabète est requise'),
+  diabeticTreatment: z.string().min(1, 'Le traitement antidiabétique est requis'),
+  associatedDiseases: z.array(z.string()).optional(),
+  foodAllergiesIntolerances: z.array(z.string()).optional(),
+
+  // Section 6: Objectives
+  objectives: z.array(z.string()).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -93,7 +108,9 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    console.error('Assessment submission error:', error);
+    const errorMsg = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
 
@@ -116,6 +133,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ assessments });
   } catch (error) {
+    console.error('Assessment GET error:', error);
     return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
   }
 }

@@ -17,37 +17,42 @@ const authConfig = {
         password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
-        const validatedCredentials = credentialsSchema.safeParse(credentials);
+        try {
+          const validatedCredentials = credentialsSchema.safeParse(credentials);
 
-        if (!validatedCredentials.success) {
+          if (!validatedCredentials.success) {
+            return null;
+          }
+
+          await connectDB();
+
+          const user = await User.findOne({
+            email: validatedCredentials.data.email,
+          }).select('+password');
+
+          if (!user) {
+            return null;
+          }
+
+          const isPasswordCorrect = await user.comparePassword(
+            validatedCredentials.data.password
+          );
+
+          if (!isPasswordCorrect) {
+            return null;
+          }
+
+          return {
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            hasCompletedAssessment: user.hasCompletedAssessment,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           return null;
         }
-
-        await connectDB();
-
-        const user = await User.findOne({
-          email: validatedCredentials.data.email,
-        }).select('+password');
-
-        if (!user) {
-          return null;
-        }
-
-        const isPasswordCorrect = await user.comparePassword(
-          validatedCredentials.data.password
-        );
-
-        if (!isPasswordCorrect) {
-          return null;
-        }
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          hasCompletedAssessment: user.hasCompletedAssessment,
-        };
       },
     }),
   ],
@@ -57,23 +62,38 @@ const authConfig = {
   },
   callbacks: {
     async signOut({ token }: any) {
-      return true;
+      try {
+        return true;
+      } catch (error) {
+        console.error('SignOut error:', error);
+        return true;
+      }
     },
     async jwt({ token, user }: any) {
-      if (user) {
-        token.role = user.role;
-        token.id = user.id;
-        token.hasCompletedAssessment = user.hasCompletedAssessment;
+      try {
+        if (user) {
+          token.role = user.role;
+          token.id = user.id;
+          token.hasCompletedAssessment = user.hasCompletedAssessment;
+        }
+        return token;
+      } catch (error) {
+        console.error('JWT callback error:', error);
+        return token;
       }
-      return token;
     },
     async session({ session, token }: any) {
-      if (session?.user) {
-        session.user.role = token.role as 'user' | 'admin';
-        session.user.id = token.id as string;
-        session.user.hasCompletedAssessment = token.hasCompletedAssessment as boolean;
+      try {
+        if (session?.user) {
+          session.user.role = token.role as 'user' | 'admin';
+          session.user.id = token.id as string;
+          session.user.hasCompletedAssessment = token.hasCompletedAssessment as boolean;
+        }
+        return session;
+      } catch (error) {
+        console.error('Session callback error:', error);
+        return session;
       }
-      return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

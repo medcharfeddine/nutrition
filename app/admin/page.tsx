@@ -1820,27 +1820,13 @@ export default function AdminPage() {
                       )}
                     </div>
 
-                    {/* Physical Activity Level */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Activité Physique</label>
-                      {isEditingUser ? (
-                        <select
-                          value={editingUserData?.assessment?.physicalActivityLevel || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, physicalActivityLevel: e.target.value }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Sélectionnez</option>
-                          <option value="sedentary">Sédentaire</option>
-                          <option value="moderate">Modéré</option>
-                          <option value="active">Actif</option>
-                        </select>
-                      ) : (
+                    {/* Physical Activity Level - DEPRECATED, keeping for legacy data */}
+                    {selectedUser.assessment?.physicalActivityLevel && (
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <label className="text-xs font-medium text-gray-700">Activité Physique (Legacy)</label>
                         <p className="text-gray-900">{selectedUser.assessment?.physicalActivityLevel || '-'}</p>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* Smoking */}
                     <div className="p-3 bg-gray-50 rounded-lg col-span-2">
@@ -1920,199 +1906,293 @@ export default function AdminPage() {
                       )}
                     </div>
 
-                    {/* Sleep Hours */}
+                    {/* Section 3: Mode de Vie Description */}
                     <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Heures Sommeil</label>
+                      <label className="text-xs font-medium text-gray-700">Description Mode de Vie</label>
                       {isEditingUser ? (
-                        <div className="flex gap-4 mt-2">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="sleepHours"
-                              value="less_than_6"
-                              checked={editingUserData?.assessment?.sleepHours === 'less_than_6'}
-                              onChange={(e) => setEditingUserData({
-                                ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), sleepHours: e.target.value }
-                              })}
-                              className="w-4 h-4"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">&lt;6h</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="sleepHours"
-                              value="6_to_8"
-                              checked={editingUserData?.assessment?.sleepHours === '6_to_8'}
-                              onChange={(e) => setEditingUserData({
-                                ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), sleepHours: e.target.value }
-                              })}
-                              className="w-4 h-4"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">6-8h</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="sleepHours"
-                              value="more_than_8"
-                              checked={editingUserData?.assessment?.sleepHours === 'more_than_8'}
-                              onChange={(e) => setEditingUserData({
-                                ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), sleepHours: e.target.value }
-                              })}
-                              className="w-4 h-4"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">&gt;8h</span>
-                          </label>
-                        </div>
+                        <textarea
+                          value={editingUserData?.assessment?.lifestyleDescription || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, lifestyleDescription: e.target.value }
+                          })}
+                          rows={2}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        />
                       ) : (
-                        <p className="text-gray-900">{selectedUser.assessment?.sleepHours || '-'}</p>
+                        <p className="text-gray-900">{selectedUser.assessment?.lifestyleDescription || '-'}</p>
                       )}
                     </div>
 
-                    {/* Meals Per Day */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Repas/Jour</label>
+                    {/* Section 3: Practices Physical Activity */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Activité Physique?</label>
                       {isEditingUser ? (
                         <div className="flex gap-4 mt-2">
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              name="mealsPerDay"
-                              value="1"
-                              checked={editingUserData?.assessment?.mealsPerDay === '1'}
+                              name="practicesPhysicalActivity"
+                              value="yes"
+                              checked={editingUserData?.assessment?.practicesPhysicalActivity === 'yes'}
                               onChange={(e) => setEditingUserData({
                                 ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), mealsPerDay: e.target.value }
+                                assessment: { ...editingUserData?.assessment, practicesPhysicalActivity: e.target.value }
                               })}
                               className="w-4 h-4"
                             />
-                            <span className="ml-2 text-sm text-gray-700">1</span>
+                            <span className="ml-2 text-sm text-gray-700">Oui</span>
                           </label>
                           <label className="flex items-center">
                             <input
                               type="radio"
-                              name="mealsPerDay"
-                              value="2"
-                              checked={editingUserData?.assessment?.mealsPerDay === '2'}
+                              name="practicesPhysicalActivity"
+                              value="no"
+                              checked={editingUserData?.assessment?.practicesPhysicalActivity === 'no'}
                               onChange={(e) => setEditingUserData({
                                 ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), mealsPerDay: e.target.value }
+                                assessment: { ...editingUserData?.assessment, practicesPhysicalActivity: e.target.value }
                               })}
                               className="w-4 h-4"
                             />
-                            <span className="ml-2 text-sm text-gray-700">2</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="mealsPerDay"
-                              value="3"
-                              checked={editingUserData?.assessment?.mealsPerDay === '3'}
-                              onChange={(e) => setEditingUserData({
-                                ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), mealsPerDay: e.target.value }
-                              })}
-                              className="w-4 h-4"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">3</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="mealsPerDay"
-                              value="more_than_3"
-                              checked={editingUserData?.assessment?.mealsPerDay === 'more_than_3'}
-                              onChange={(e) => setEditingUserData({
-                                ...editingUserData,
-                                assessment: { ...(editingUserData?.assessment || {}), mealsPerDay: e.target.value }
-                              })}
-                              className="w-4 h-4"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">&gt;3</span>
+                            <span className="ml-2 text-sm text-gray-700">Non</span>
                           </label>
                         </div>
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.practicesPhysicalActivity || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 4: Physical Activity Description */}
+                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
+                      <label className="text-xs font-medium text-gray-700">Description Activité Physique</label>
+                      {isEditingUser ? (
+                        <textarea
+                          value={editingUserData?.assessment?.physicalActivityDescription || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, physicalActivityDescription: e.target.value }
+                          })}
+                          rows={2}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.physicalActivityDescription || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 4: Type d'Activité Physique */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Type d'Activité</label>
+                      {isEditingUser ? (
+                        <select
+                          value={editingUserData?.assessment?.physicalActivityType || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, physicalActivityType: e.target.value }
+                          })}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Marche">Marche</option>
+                          <option value="Sport">Sport</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.physicalActivityType || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 4: Fréquence */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Fréquence</label>
+                      {isEditingUser ? (
+                        <select
+                          value={editingUserData?.assessment?.physicalActivityFrequency || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, physicalActivityFrequency: e.target.value }
+                          })}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="1-2 fois/semaine">1-2 fois/semaine</option>
+                          <option value="≥ 3 fois/semaine">≥ 3 fois/semaine</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.physicalActivityFrequency || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 5: Dietary Description */}
+                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
+                      <label className="text-xs font-medium text-gray-700">Description Habitudes Alimentaires</label>
+                      {isEditingUser ? (
+                        <textarea
+                          value={editingUserData?.assessment?.dietaryDescription || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, dietaryDescription: e.target.value }
+                          })}
+                          rows={2}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.dietaryDescription || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 5: Meals Per Day */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Repas/Jour</label>
+                      {isEditingUser ? (
+                        <select
+                          value={editingUserData?.assessment?.mealsPerDay || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, mealsPerDay: e.target.value }
+                          })}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="1 repas">1 repas</option>
+                          <option value="2 repas">2 repas</option>
+                          <option value="3 repas">3 repas</option>
+                          <option value="Autre">Autre</option>
+                        </select>
                       ) : (
                         <p className="text-gray-900">{selectedUser.assessment?.mealsPerDay || '-'}</p>
                       )}
                     </div>
 
-                    {/* Medical Treatment */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Traitement Médical</label>
+                    {/* Section 5: Snacks Between Meals */}
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <label className="text-xs font-medium text-gray-700">Collations</label>
                       {isEditingUser ? (
-                        <textarea
-                          value={editingUserData?.assessment?.medicalTreatment || ''}
+                        <select
+                          value={editingUserData?.assessment?.snacksBetweenMeals || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, medicalTreatment: e.target.value }
+                            assessment: { ...editingUserData?.assessment, snacksBetweenMeals: e.target.value }
+                          })}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Oui, régulièrement">Oui, régulièrement</option>
+                          <option value="Oui, occasionnellement">Oui, occasionnellement</option>
+                          <option value="Non">Non</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900">{selectedUser.assessment?.snacksBetweenMeals || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 6: Diabetes Description */}
+                    <div className="p-3 bg-red-50 rounded-lg col-span-2 border border-red-200">
+                      <label className="text-xs font-medium text-red-700">Description Diabète</label>
+                      {isEditingUser ? (
+                        <textarea
+                          value={editingUserData?.assessment?.diabetesDescription || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, diabetesDescription: e.target.value }
                           })}
                           rows={2}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
-                        <p className="text-gray-900">{selectedUser.assessment?.medicalTreatment || '-'}</p>
+                        <p className="text-red-900 font-semibold">{selectedUser.assessment?.diabetesDescription || '-'}</p>
                       )}
                     </div>
 
-                    {/* Main Objective */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Objectif Principal</label>
+                    {/* Section 6: Diabetes Type */}
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      <label className="text-xs font-medium text-red-700">Type Diabète</label>
                       {isEditingUser ? (
-                        <textarea
-                          value={editingUserData?.assessment?.mainObjective || ''}
+                        <select
+                          value={editingUserData?.assessment?.diabetesType || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, mainObjective: e.target.value }
+                            assessment: { ...editingUserData?.assessment, diabetesType: e.target.value }
                           })}
-                          rows={2}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Diabète de type 1">Type 1</option>
+                          <option value="Diabète de type 2">Type 2</option>
+                          <option value="Gestationnel (femme enceinte)">Gestationnel</option>
+                        </select>
                       ) : (
-                        <p className="text-gray-900">{selectedUser.assessment?.mainObjective || '-'}</p>
+                        <p className="text-red-900 font-semibold">{selectedUser.assessment?.diabetesType || '-'}</p>
                       )}
                     </div>
 
-                    {/* Other Objective */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Autre Objectif</label>
+                    {/* Section 6: Diabetes Duration */}
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      <label className="text-xs font-medium text-red-700">Durée</label>
                       {isEditingUser ? (
-                        <textarea
-                          value={editingUserData?.assessment?.otherObjective || ''}
+                        <select
+                          value={editingUserData?.assessment?.diabetesDuration || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, otherObjective: e.target.value }
+                            assessment: { ...editingUserData?.assessment, diabetesDuration: e.target.value }
                           })}
-                          rows={2}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="< 1 an">&lt; 1 an</option>
+                          <option value="1-5 ans">1-5 ans</option>
+                          <option value="> 5 ans">&gt; 5 ans</option>
+                          <option value="Autre">Autre</option>
+                        </select>
                       ) : (
-                        <p className="text-gray-900">{selectedUser.assessment?.otherObjective || '-'}</p>
+                        <p className="text-red-900 font-semibold">{selectedUser.assessment?.diabetesDuration || '-'}</p>
                       )}
                     </div>
 
-                    {/* Chronic Diseases */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Maladies Chroniques</label>
+                    {/* Section 6: Diabetic Treatment */}
+                    <div className="p-3 bg-red-50 rounded-lg col-span-2 border border-red-200">
+                      <label className="text-xs font-medium text-red-700">Traitement Antidiabétique</label>
+                      {isEditingUser ? (
+                        <select
+                          value={editingUserData?.assessment?.diabeticTreatment || ''}
+                          onChange={(e) => setEditingUserData({
+                            ...editingUserData,
+                            assessment: { ...editingUserData?.assessment, diabeticTreatment: e.target.value }
+                          })}
+                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Insuline basale">Insuline basale</option>
+                          <option value="Insuline rapide">Insuline rapide</option>
+                          <option value="Antidiabétiques oraux">Antidiabétiques oraux</option>
+                          <option value="Régime alimentaire équilibré seul">Régime seul</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                      ) : (
+                        <p className="text-red-900 font-semibold">{selectedUser.assessment?.diabeticTreatment || '-'}</p>
+                      )}
+                    </div>
+
+                    {/* Section 6: Associated Diseases */}
+                    <div className="p-3 bg-red-50 rounded-lg col-span-2 border border-red-200">
+                      <label className="text-xs font-medium text-red-700">Maladies Associées</label>
                       {isEditingUser ? (
                         <input
                           type="text"
                           placeholder="Séparées par des virgules"
-                          value={editingUserData?.assessment?.chronicDiseases?.join(', ') || ''}
+                          value={editingUserData?.assessment?.associatedDiseases?.join(', ') || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, chronicDiseases: e.target.value.split(',').map(d => d.trim()).filter(d => d) }
+                            assessment: { ...editingUserData?.assessment, associatedDiseases: e.target.value.split(',').map(d => d.trim()).filter(d => d) }
                           })}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedUser.assessment?.chronicDiseases?.length ? (
-                            selectedUser.assessment.chronicDiseases.map((disease: string, idx: number) => (
-                              <span key={idx} className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                          {selectedUser.assessment?.associatedDiseases?.length ? (
+                            selectedUser.assessment.associatedDiseases.map((disease: string, idx: number) => (
+                              <span key={idx} className="inline-block bg-red-200 text-red-900 px-2 py-1 rounded text-xs font-semibold">
                                 {disease}
                               </span>
                             ))
@@ -2123,25 +2203,25 @@ export default function AdminPage() {
                       )}
                     </div>
 
-                    {/* Allergies/Intolerances */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Allergies/Intolérances</label>
+                    {/* Section 6: Food Allergies/Intolerances */}
+                    <div className="p-3 bg-orange-50 rounded-lg col-span-2 border border-orange-200">
+                      <label className="text-xs font-medium text-orange-700">Allergies/Intolérances Alimentaires</label>
                       {isEditingUser ? (
                         <input
                           type="text"
                           placeholder="Séparées par des virgules"
-                          value={editingUserData?.assessment?.allergiesIntolerances?.join(', ') || ''}
+                          value={editingUserData?.assessment?.foodAllergiesIntolerances?.join(', ') || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            assessment: { ...editingUserData?.assessment, allergiesIntolerances: e.target.value.split(',').map(a => a.trim()).filter(a => a) }
+                            assessment: { ...editingUserData?.assessment, foodAllergiesIntolerances: e.target.value.split(',').map(a => a.trim()).filter(a => a) }
                           })}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedUser.assessment?.allergiesIntolerances?.length ? (
-                            selectedUser.assessment.allergiesIntolerances.map((allergy: string, idx: number) => (
-                              <span key={idx} className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs">
+                          {selectedUser.assessment?.foodAllergiesIntolerances?.length ? (
+                            selectedUser.assessment.foodAllergiesIntolerances.map((allergy: string, idx: number) => (
+                              <span key={idx} className="inline-block bg-orange-200 text-orange-900 px-2 py-1 rounded text-xs font-semibold">
                                 {allergy}
                               </span>
                             ))
@@ -2152,9 +2232,9 @@ export default function AdminPage() {
                       )}
                     </div>
 
-                    {/* Other Allergies */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Autres Allergies</label>
+                    {/* Section 6: Other Allergies */}
+                    <div className="p-3 bg-orange-50 rounded-lg col-span-2 border border-orange-200">
+                      <label className="text-xs font-medium text-orange-700">Autres Allergies</label>
                       {isEditingUser ? (
                         <textarea
                           value={editingUserData?.assessment?.otherAllergies || ''}
@@ -2169,256 +2249,58 @@ export default function AdminPage() {
                         <p className="text-gray-900">{selectedUser.assessment?.otherAllergies || '-'}</p>
                       )}
                     </div>
-                  </div>
-                </div>
-              )}
 
-              {/* Profile Data */}
-              {((selectedUser.profile && Object.keys(selectedUser.profile).length > 0) || isEditingUser) && (
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                    Profil Utilisateur
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Age */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Âge</label>
+                    {/* Section 7: Objectives Description */}
+                    <div className="p-3 bg-purple-50 rounded-lg col-span-2 border border-purple-200">
+                      <label className="text-xs font-medium text-purple-700">Description Objectifs</label>
                       {isEditingUser ? (
-                        <input
-                          type="number"
-                          value={editingUserData?.profile?.age || ''}
+                        <textarea
+                          value={editingUserData?.assessment?.objectivesDescription || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), age: e.target.value ? parseInt(e.target.value) : null }
+                            assessment: { ...editingUserData?.assessment, objectivesDescription: e.target.value }
                           })}
+                          rows={2}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.age || '-'}</p>
+                        <p className="text-purple-900">{selectedUser.assessment?.objectivesDescription || '-'}</p>
                       )}
                     </div>
 
-                    {/* Gender (Profile) */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Sexe</label>
-                      {isEditingUser ? (
-                        <select
-                          value={editingUserData?.profile?.gender || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), gender: e.target.value }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Sélectionner</option>
-                          <option value="Homme">Homme</option>
-                          <option value="Femme">Femme</option>
-                          <option value="Autre">Autre</option>
-                        </select>
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.gender || '-'}</p>
-                      )}
-                    </div>
-
-                    {/* Lifestyle */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Mode de Vie</label>
-                      {isEditingUser ? (
-                        <select
-                          value={editingUserData?.profile?.lifestyle || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), lifestyle: e.target.value }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                          <option value="">Sélectionner</option>
-                          <option value="sedentary">Sédentaire</option>
-                          <option value="moderate">Modéré</option>
-                          <option value="active">Actif</option>
-                        </select>
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.lifestyle || '-'}</p>
-                      )}
-                    </div>
-
-                    {/* Habits */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Habitudes</label>
+                    {/* Section 7: Objectives */}
+                    <div className="p-3 bg-purple-50 rounded-lg col-span-2 border border-purple-200">
+                      <label className="text-xs font-medium text-purple-700">Objectifs du Programme</label>
                       {isEditingUser ? (
                         <input
                           type="text"
-                          placeholder="Séparées par des virgules"
-                          value={editingUserData?.profile?.habits?.join(', ') || ''}
+                          placeholder="Séparés par des virgules"
+                          value={editingUserData?.assessment?.objectives?.join(', ') || ''}
                           onChange={(e) => setEditingUserData({
                             ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), habits: e.target.value.split(',').map(h => h.trim()).filter(h => h) }
+                            assessment: { ...editingUserData?.assessment, objectives: e.target.value.split(',').map(o => o.trim()).filter(o => o) }
                           })}
                           className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
                         />
                       ) : (
                         <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedUser.profile?.habits?.length ? (
-                            selectedUser.profile.habits.map((habit: string, idx: number) => (
-                              <span key={idx} className="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
-                                {habit}
+                          {selectedUser.assessment?.objectives?.length ? (
+                            selectedUser.assessment.objectives.map((obj: string, idx: number) => (
+                              <span key={idx} className="inline-block bg-purple-200 text-purple-900 px-2 py-1 rounded text-xs font-semibold">
+                                {obj}
                               </span>
                             ))
                           ) : (
                             <p className="text-gray-900">-</p>
                           )}
                         </div>
-                      )}
-                    </div>
-
-                    {/* Diseases */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Maladies Chroniques</label>
-                      {isEditingUser ? (
-                        <div className="space-y-2 mt-2">
-                          {['Diabète', 'Obésité', 'Hypertension Artérielle', 'Troubles Digestifs', 'Dyslipidémie'].map((disease: string) => (
-                            <label key={disease} className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={(editingUserData?.profile?.diseases || []).includes(disease)}
-                                onChange={(e) => {
-                                  const diseases = editingUserData?.profile?.diseases || [];
-                                  if (e.target.checked) {
-                                    setEditingUserData({
-                                      ...editingUserData,
-                                      profile: { ...(editingUserData?.profile || {}), diseases: [...diseases, disease] }
-                                    });
-                                  } else {
-                                    setEditingUserData({
-                                      ...editingUserData,
-                                      profile: { ...(editingUserData?.profile || {}), diseases: diseases.filter((d: string) => d !== disease) }
-                                    });
-                                  }
-                                }}
-                                className="w-4 h-4"
-                              />
-                              <span className="ml-2 text-sm text-gray-700">{disease}</span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedUser.profile?.diseases?.length ? (
-                            selectedUser.profile.diseases.map((disease: string, idx: number) => (
-                              <span key={idx} className="inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs">
-                                {disease}
-                              </span>
-                            ))
-                          ) : (
-                            <p className="text-gray-900">-</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Dietary Preferences */}
-                    <div className="p-3 bg-gray-50 rounded-lg col-span-2">
-                      <label className="text-xs font-medium text-gray-700">Préférences Alimentaires</label>
-                      {isEditingUser ? (
-                        <input
-                          type="text"
-                          placeholder="Séparées par des virgules"
-                          value={editingUserData?.profile?.dietaryPreferences?.join(', ') || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), dietaryPreferences: e.target.value.split(',').map(p => p.trim()).filter(p => p) }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {selectedUser.profile?.dietaryPreferences?.length ? (
-                            selectedUser.profile.dietaryPreferences.map((pref: string, idx: number) => (
-                              <span key={idx} className="inline-block bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
-                                {pref}
-                              </span>
-                            ))
-                          ) : (
-                            <p className="text-gray-900">-</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Calorie Goal */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Calories</label>
-                      {isEditingUser ? (
-                        <input
-                          type="number"
-                          value={editingUserData?.profile?.calorieGoal || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), calorieGoal: e.target.value ? parseInt(e.target.value) : null }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.calorieGoal ? `${selectedUser.profile.calorieGoal} kcal` : '-'}</p>
-                      )}
-                    </div>
-
-                    {/* Protein Goal */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Protéines (g)</label>
-                      {isEditingUser ? (
-                        <input
-                          type="number"
-                          value={editingUserData?.profile?.proteinGoal || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), proteinGoal: e.target.value ? parseInt(e.target.value) : null }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.proteinGoal || '-'}</p>
-                      )}
-                    </div>
-
-                    {/* Carbs Goal */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Glucides (g)</label>
-                      {isEditingUser ? (
-                        <input
-                          type="number"
-                          value={editingUserData?.profile?.carbGoal || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), carbGoal: e.target.value ? parseInt(e.target.value) : null }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.carbGoal || '-'}</p>
-                      )}
-                    </div>
-
-                    {/* Fat Goal */}
-                    <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-xs font-medium text-gray-700">Lipides (g)</label>
-                      {isEditingUser ? (
-                        <input
-                          type="number"
-                          value={editingUserData?.profile?.fatGoal || ''}
-                          onChange={(e) => setEditingUserData({
-                            ...editingUserData,
-                            profile: { ...(editingUserData?.profile || {}), fatGoal: e.target.value ? parseInt(e.target.value) : null }
-                          })}
-                          className="w-full mt-1 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{selectedUser.profile?.fatGoal || '-'}</p>
                       )}
                     </div>
                   </div>
                 </div>
               )}
+
+              
 
               {/* Assessment Metadata Section */}
               {selectedUser.assessment && (
