@@ -128,13 +128,13 @@ export default function DashboardPage() {
                 href="/messages"
                 className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                Messages
+                {t('common.messages')}
               </Link>
               <Link
                 href="/consultation-request"
                 className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                {t('common.dashboard')}
+                {t('common.consultation')}
               </Link>
               <Link
                 href="/appointments"

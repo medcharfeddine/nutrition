@@ -28,7 +28,7 @@ function getNestedValue(obj: any, path: string): string {
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('fr');
+  const [language, setLanguageState] = useState<Language>('ar');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -39,9 +39,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = savedLanguage;
     } else {
-      // Set default to French
-      document.documentElement.dir = 'ltr';
-      document.documentElement.lang = 'fr';
+      // Set default to Arabic
+      document.documentElement.dir = 'rtl';
+      document.documentElement.lang = 'ar';
     }
     setMounted(true);
   }, []);
@@ -78,9 +78,9 @@ export function useLanguage() {
   if (context === undefined) {
     // Return a safe default for server-side rendering
     return {
-      language: 'fr' as Language,
+      language: 'ar' as Language,
       setLanguage: () => {},
-      t: (key: string) => getNestedValue(translations.fr, key),
+      t: (key: string) => getNestedValue(translations.ar, key),
     };
   }
   return context;

@@ -1,104 +1,105 @@
+
 Section 1 of 7
+معلومات عامة:
 
-identifiant *
-Date de Naissance *
-Sexe *
-    homme
-    Femme
-Région *
-numéro de téléphone *
-taille (cm) *
-poids (kg) *
+المعرف*
+تاريخ الولادة*
+الجنس*
+    ذكر 
+    انثى
+الجهة*
+رقم الهاتف*
+الطول (صم )*
+الوزن (كغ)*
+
+Section 2 of 7
+نمط الحياة
 
 
-
-Section 2 
-mode de vie 
-
-fumez-vous *
+هل تدخن؟*
     oui
     non
-consommez -vous de d'alcool ?*
+هل تتناول الكحول؟*
     oui
     non
-nombre d'heures de sommeil par nuit 
-pratiquez -vous une activité physique ?*
+عدد ساعات النوم فالليلة
 
-Section 3
+هل تمارس نشاط بدني ؟*
+    نعم
+    لا
 
+"if user chose the second option skip section 3"
+Section 3 of 7
 
-type  d'activité physique *
-    marche
-    sport
-    Other:
+نوع النشاط البدني
 
-fréquence 
-    1-2 fois/semaine
-    >= 3 fois /semaine
+    مشي
+    رياضة
+    شىء اخر
 
-Section 4
+معدل ممارسة النشاط البدني
+    1-2 مرات في الاسبوع
+    3 مرات فما فوق فالاسبوع
 
-habitudes alimentaires 
-
-
-nombre de repas par jour *
-    1 repas
-    2 repas
-    3 repas
-    Other:
-
-prenez-vous des collations entre les repas ?*
-    oui , régulièrement
-    oui , occasionnellement
-    non
-
-Section 5
-patient diabétique 
+Section 4 of 7
+عادات غذائية
 
 
-Quel est votre type de diabète   ?*
-    Diabète de type 1
-    Diabète de type 2
-    gestationnel ( femme enceinte)
+عدد الوجبات في اليوم
+    وجبة واحدة
+    2 وجبات
+    3 وجبات
+    اكثر من 3 وجبات
+هل تتناول وجبات خفيفة بين الوجبات الرئيسية؟
+    نعم ، دائما
+    نعم ، احيانا
+    لا
 
-depuis quand ?*
-    <1 an
-    1-5 ans
-    > 5 ans
-    Other:
+Section 5 of 7
+مرض السكري
 
-Quel est votre traitement antidiabétique actuel ?*
-    insuline basale
-    insuline rapide
-    antidiabétiques oraux
-    régime alimentaire  équilibré seul
-    Other:
+ما هو نوع مرض السكري الذي تعاني منه؟*
+    سكري صنف 1
+سكري صنف    2
+    سكري الحمل
 
-avez vous d'autres maladies associées ? *
-    maladie coaliaque
-    maladie cardiovasculaire
-    hypertension artérielle
-    dyslipidémie
-    maladie endocriniennes et hormonales (sopk ,dysthyroidie ..)
-    obésité
-    Other:
+منذ متى ؟*
+    اقل من سنة
+    1-5 سنوات
+    اكثر من 5 سنوات
+    شىء اخر    
+ما هو علاجك الحالي لمرض السكري ؟*
+    الأنسولين القاعدي
+    الانسولين السريع
+    الادوية الفموية
+    الحمية الغذائية فقط
+    شىء اخر
+هل تعاني من أمراض أخرى مصاحبة لمرض السكري ؟
+    الداء البطني
+    أمراض القلب والأوعية الدموية
+    ارتفاع ضغط الدم
+    خلل شحوم الدم
+    أمراض الغدد الصماء والهرمونات
+    السمنة
+    لا شيء
+    شىء اخر
 
-avez-vous une allérgies ou intolérances alimentaires ?*
-    gluten
-    lactose
-    oeufs
-    aucune
-    autre:
+هل تعاني من حساسية أو عدم تحمل تجاه أطعمة معينة؟*
+    الغلوتين
+    اللاكتوز
+    البيض
+    لا شيء
+    شىء اخر
 
-Section 6
-objectifs et motivation 
+Section 6 of 7
+الأهداف والدوافع 
 
  
-quels sont vos objectifs en intégrant le programme Nutri Ed *
-    mieux contrôler la glycémie
-    mieux comprendre le lien entre alimentation et diabéte
-    adapter les doses d'insuline en fonction des repas
-    prévenir les complication liées au diabéte
-    renforcer l'autonomie dans la gestion de la maladie
-    renforcer la motivation et l'engagement
-    Other:
+ما هي أهدافك من الانضمام إلى برنامج Nutri Ed*
+    تحسين التحكم في مستوى السكر في الدم
+    فهم أفضل للعلاقة بين التغذية ومرض السكري
+    تعديل جرعات الأنسولين وفقًا للوجبات
+    الوقاية من المضاعفات المرتبطة بمرض السكري
+    تعزيز الاستقلالية في التعامل مع المرض
+    تعزيز الحافز والالتزام
+    شىء اخر

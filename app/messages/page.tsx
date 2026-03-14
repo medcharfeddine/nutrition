@@ -97,15 +97,15 @@ export default function MessagesPage() {
         // Show success notification
         addNotification({
           type: 'success',
-          title: 'Message Envoyé',
-          message: 'Votre message a été envoyé avec succès à l\'équipe de support.',
+          title: t('messages.messageSent'),
+          message: t('messages.messageSentDesc'),
           duration: 4000,
         });
       } else {
         addNotification({
           type: 'error',
-          title: 'Erreur',
-          message: 'Impossible d\'envoyer le message. Veuillez réessayer.',
+          title: t('messages.error'),
+          message: t('messages.sendError'),
           duration: 4000,
         });
       }
@@ -113,8 +113,8 @@ export default function MessagesPage() {
       console.error('Failed to send message:', error);
       addNotification({
         type: 'error',
-        title: 'Erreur de Connexion',
-        message: 'Une erreur est survenue lors de l\'envoi du message.',
+        title: t('messages.connectionError'),
+        message: t('messages.connectionErrorDesc'),
         duration: 4000,
       });
     } finally {
@@ -148,37 +148,37 @@ export default function MessagesPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">Messages</h1>
+              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{t('messages.title')}</h1>
               <div className="hidden md:flex gap-6">
                 <Link
                   href="/dashboard"
                   className="text-gray-700 hover:text-indigo-600 font-medium"
                 >
-                  Tableau de Bord
+                  {t('messages.dashboard')}
                 </Link>
                 <Link
                   href="/messages"
                   className="text-indigo-600 hover:text-indigo-700 font-medium border-b-2 border-indigo-600"
                 >
-                  Messages
+                  {t('messages.title')}
                 </Link>
                 <Link
                   href="/consultation-request"
                   className="text-gray-700 hover:text-indigo-600 font-medium"
                 >
-                  Consultation
+                  {t('messages.consultation')}
                 </Link>
                 <Link
                   href="/appointments"
                   className="text-gray-700 hover:text-indigo-600 font-medium"
                 >
-                  Rendez-vous
+                  {t('messages.appointments')}
                 </Link>
                 <Link
                   href="/profile"
                   className="text-gray-700 hover:text-indigo-600 font-medium"
                 >
-                  Profil
+                  {t('messages.profile')}
                 </Link>
               </div>
             </div>
@@ -201,8 +201,8 @@ export default function MessagesPage() {
         <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-screen max-h-96">
           {/* Header */}
           <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white">Conversation avec Support</h2>
-            <p className="text-indigo-100 text-sm">Connectez-vous avec notre équipe d'administration</p>
+            <h2 className="text-2xl font-bold text-white">{t('messages.conversation')}</h2>
+            <p className="text-indigo-100 text-sm">{t('messages.connectTeam')}</p>
           </div>
 
           {/* Messages Display */}
@@ -256,7 +256,7 @@ export default function MessagesPage() {
                 type="text"
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
-                placeholder="Tapez votre message..."
+                placeholder={t('messages.typeMessage')}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                 disabled={messageLoading}
               />
@@ -265,7 +265,7 @@ export default function MessagesPage() {
                 disabled={messageLoading || !messageContent.trim()}
                 className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-semibold transition"
               >
-                {messageLoading ? 'Envoi...' : 'Envoyer'}
+                {messageLoading ? t('messages.sending') : t('messages.send')}
               </button>
             </form>
           </div>

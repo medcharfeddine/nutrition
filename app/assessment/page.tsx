@@ -11,7 +11,7 @@ export default function AssessmentPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { t } = useLanguage();
-  const [currentSection, setCurrentSection] = useState(2);
+  const [currentSection, setCurrentSection] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -66,6 +66,22 @@ export default function AssessmentPage() {
       router.push('/dashboard');
     }
   }, [status, session?.user?.hasCompletedAssessment, router]);
+
+  // Helper function to get next section, skipping section 3 if no physical activity
+  const getNextSection = (current: number): number => {
+    if (current === 2 && formData.practicesPhysicalActivity === 'no') {
+      return 4; // Skip section 3 if user selected "no" for physical activity
+    }
+    return current + 1;
+  };
+
+  // Helper function to get previous section, skipping section 3 if no physical activity
+  const getPreviousSection = (current: number): number => {
+    if (current === 4 && formData.practicesPhysicalActivity === 'no') {
+      return 2; // Skip back to section 2 if no physical activity
+    }
+    return current - 1;
+  };
 
   // Show loading while checking auth or redirecting
   if (status === 'loading' || status === 'unauthenticated' || session?.user?.hasCompletedAssessment) {
@@ -126,6 +142,14 @@ export default function AssessmentPage() {
     ];
 
     const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData]);
+    
+    // Check if food allergies are selected (at least one option required)
+    if (formData.foodAllergiesIntolerances.length === 0) {
+      setError(t('assessment.pleaseSelectAllergy') || 'Veuillez sélectionner au moins une option pour les allergies alimentaires');
+      setLoading(false);
+      return;
+    }
+    
     if (missingFields.length > 0) {
       setError(`Veuillez compléter tous les champs requis: ${missingFields.join(', ')}`);
       setLoading(false);
@@ -192,13 +216,13 @@ export default function AssessmentPage() {
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-700">Section {currentSection - 1} de 6</span>
-            <span className="text-sm text-gray-600">{Math.round(((currentSection - 1) / 6) * 100)}%</span>
+            <span className="text-sm font-semibold text-gray-700">Section {currentSection} de 6</span>
+            <span className="text-sm text-gray-600">{Math.round((currentSection / 6) * 100)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${((currentSection - 1) / 6) * 100}%` }}
+              style={{ width: `${(currentSection / 6) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -213,22 +237,22 @@ export default function AssessmentPage() {
         {/* Success Alert */}
         {success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-600 text-sm font-semibold">Évaluation enregistrée avec succès! Redirection en cours...</p>
+            <p className="text-green-600 text-sm font-semibold">{t('assessment.submitted')}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 2: Identification */}
-          {currentSection === 2 && (
+          {/* Section 1: Identification */}
+          {currentSection === 1 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Identification</h3>
-                <p className="text-gray-600 text-sm">Section 2 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.identification')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section1Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Identifiant <span className="text-red-500">*</span>
+                  {t('assessment.identifier')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -237,13 +261,13 @@ export default function AssessmentPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Votre nom complet"
+                  placeholder={t('assessment.yourFullName')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date de Naissance <span className="text-red-500">*</span>
+                  {t('assessment.dateOfBirthLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -257,7 +281,7 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sexe <span className="text-red-500">*</span>
+                  {t('assessment.genderLabel')} <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="gender"
@@ -266,16 +290,16 @@ export default function AssessmentPage() {
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 >
-                  <option value="">Sélectionnez</option>
-                  <option value="male">Homme</option>
-                  <option value="female">Femme</option>
-                  <option value="other">Autre</option>
+                  <option value="">{t('assessment.select')}</option>
+                  <option value="male">{t('assessment.male')}</option>
+                  <option value="female">{t('assessment.female')}</option>
+                  <option value="other">{t('assessment.other')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Région <span className="text-red-500">*</span>
+                  {t('assessment.regionLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -284,13 +308,13 @@ export default function AssessmentPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Votre région"
+                  placeholder={t('assessment.yourRegion')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Numéro de Téléphone <span className="text-red-500">*</span>
+                  {t('assessment.phoneNumberLabel')} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -299,14 +323,14 @@ export default function AssessmentPage() {
                   onChange={handleInputChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Votre numéro"
+                  placeholder={t('assessment.yourPhoneNumber')}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Taille (cm) <span className="text-red-500">*</span>
+                    {t('assessment.heightLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -315,13 +339,13 @@ export default function AssessmentPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="p.ex., 170"
+                    placeholder={t('assessment.heightPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Poids (kg) <span className="text-red-500">*</span>
+                    {t('assessment.weightLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -330,38 +354,38 @@ export default function AssessmentPage() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="p.ex., 70"
+                    placeholder={t('assessment.weightPlaceholder')}
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section 3: Lifestyle */}
-          {currentSection === 3 && (
+          {/* Section 2: Lifestyle */}
+          {currentSection === 2 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Mode de Vie</h3>
-                <p className="text-gray-600 text-sm">Section 3 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.lifestyleTitle')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section2Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optionnel)
+                  {t('assessment.descriptionOptional')}
                 </label>
                 <textarea
                   name="lifestyleDescription"
                   value={formData.lifestyleDescription}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez votre mode de vie en général..."
+                  placeholder={t('assessment.describeYourLifestyle')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Fumez-vous? <span className="text-red-500">*</span>
+                  {t('assessment.doYouSmoke')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center">
@@ -374,7 +398,7 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Oui</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.yes')}</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -386,14 +410,14 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Non</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.no')}</span>
                   </label>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Consommez-vous de l'alcool? <span className="text-red-500">*</span>
+                  {t('assessment.doYouConsumeAlcohol')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center">
@@ -406,7 +430,7 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Oui</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.yes')}</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -418,14 +442,14 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Non</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.no')}</span>
                   </label>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre d'heures de sommeil par nuit
+                  {t('assessment.sleepHoursPerNight')}
                 </label>
                 <input
                   type="number"
@@ -433,13 +457,13 @@ export default function AssessmentPage() {
                   value={formData.sleepHours}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="p.ex., 7"
+                  placeholder={t('assessment.sleepPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Pratiquez-vous une activité physique? <span className="text-red-500">*</span>
+                  {t('assessment.doYouExercise')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
                   <label className="flex items-center">
@@ -452,7 +476,7 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Oui</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.yes')}</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -464,51 +488,55 @@ export default function AssessmentPage() {
                       required
                       className="w-4 h-4 text-indigo-600"
                     />
-                    <span className="ml-2 text-gray-700">Non</span>
+                    <span className="ml-2 text-gray-700">{t('assessment.no')}</span>
                   </label>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Section 4: Physical Activity */}
-          {currentSection === 4 && (
+          {/* Section 3: Physical Activity */}
+          {currentSection === 3 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Activité Physique</h3>
-                <p className="text-gray-600 text-sm">Section 4 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.physicalActivityTitle')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section3Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optionnel)
+                  {t('assessment.descriptionOptional')}
                 </label>
                 <textarea
                   name="physicalActivityDescription"
                   value={formData.physicalActivityDescription}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez votre activité physique..."
+                  placeholder={t('assessment.describeYourActivity')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Type d'Activité Physique
+                  {t('assessment.typeOfPhysicalActivity')}
                 </label>
                 <div className="space-y-2">
-                  {['Marche', 'Sport', 'Autre'].map((type) => (
-                    <label key={type} className="flex items-center">
+                  {[
+                    { key: 'walking', label: t('assessment.walking') },
+                    { key: 'sport', label: t('assessment.sport') },
+                    { key: 'other', label: t('assessment.other') }
+                  ].map((type) => (
+                    <label key={type.key} className="flex items-center">
                       <input
                         type="radio"
                         name="physicalActivityType"
-                        value={type}
-                        checked={formData.physicalActivityType === type}
+                        value={type.key}
+                        checked={formData.physicalActivityType === type.key}
                         onChange={handleInputChange}
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{type}</span>
+                      <span className="ml-2 text-gray-700">{type.label}</span>
                     </label>
                   ))}
                 </div>
@@ -516,20 +544,23 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Fréquence
+                  {t('assessment.frequency')}
                 </label>
                 <div className="space-y-2">
-                  {['1-2 fois/semaine', '≥ 3 fois/semaine'].map((freq) => (
-                    <label key={freq} className="flex items-center">
+                  {[
+                    { key: 'freq1to2', label: t('assessment.frequencyPerWeek1to2') },
+                    { key: 'freq3plus', label: t('assessment.frequencyPerWeek3OrMore') }
+                  ].map((freq) => (
+                    <label key={freq.key} className="flex items-center">
                       <input
                         type="radio"
                         name="physicalActivityFrequency"
-                        value={freq}
-                        checked={formData.physicalActivityFrequency === freq}
+                        value={freq.key}
+                        checked={formData.physicalActivityFrequency === freq.key}
                         onChange={handleInputChange}
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{freq}</span>
+                      <span className="ml-2 text-gray-700">{freq.label}</span>
                     </label>
                   ))}
                 </div>
@@ -537,46 +568,50 @@ export default function AssessmentPage() {
             </div>
           )}
 
-          {/* Section 5: Health Status */}
-          {/* Section 5: Eating Habits */}
-          {currentSection === 5 && (
+          {/* Section 4: Eating Habits */}
+          {currentSection === 4 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Habitudes Alimentaires</h3>
-                <p className="text-gray-600 text-sm">Section 5 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.eatingHabitsTitle')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section4Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optionnel)
+                  {t('assessment.descriptionOptional')}
                 </label>
                 <textarea
                   name="dietaryDescription"
                   value={formData.dietaryDescription}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez vos habitudes alimentaires..."
+                  placeholder={t('assessment.describeYourDiet')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Nombre de Repas par Jour <span className="text-red-500">*</span>
+                  {t('assessment.mealsPerDayLabel')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {['1 repas', '2 repas', '3 repas', 'Autre'].map((meal) => (
-                    <label key={meal} className="flex items-center">
+                  {[
+                    { key: 'meal1', label: t('assessment.mealOption1') },
+                    { key: 'meal2', label: t('assessment.mealOption2') },
+                    { key: 'meal3', label: t('assessment.mealOption3') },
+                    { key: 'mealOther', label: t('assessment.mealOptionOther') }
+                  ].map((meal) => (
+                    <label key={meal.key} className="flex items-center">
                       <input
                         type="radio"
                         name="mealsPerDay"
-                        value={meal}
-                        checked={formData.mealsPerDay === meal}
+                        value={meal.key}
+                        checked={formData.mealsPerDay === meal.key}
                         onChange={handleInputChange}
                         required
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{meal}</span>
+                      <span className="ml-2 text-gray-700">{meal.label}</span>
                     </label>
                   ))}
                 </div>
@@ -584,20 +619,24 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Prenez-vous des collations entre les repas?
+                  {t('assessment.snacksBetweenMeals')}
                 </label>
                 <div className="space-y-2">
-                  {['Oui, régulièrement', 'Oui, occasionnellement', 'Non'].map((snack) => (
-                    <label key={snack} className="flex items-center">
+                  {[
+                    { key: 'regulary', label: t('assessment.snackOptionRegularly') },
+                    { key: 'occasionally', label: t('assessment.snackOptionOccasionally') },
+                    { key: 'no', label: t('assessment.snackOptionNo') }
+                  ].map((snack) => (
+                    <label key={snack.key} className="flex items-center">
                       <input
                         type="radio"
                         name="snacksBetweenMeals"
-                        value={snack}
-                        checked={formData.snacksBetweenMeals === snack}
+                        value={snack.key}
+                        checked={formData.snacksBetweenMeals === snack.key}
                         onChange={handleInputChange}
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{snack}</span>
+                      <span className="ml-2 text-gray-700">{snack.label}</span>
                     </label>
                   ))}
                 </div>
@@ -605,45 +644,49 @@ export default function AssessmentPage() {
             </div>
           )}
 
-          {/* Section 6: Diabetes */}
-          {currentSection === 6 && (
+          {/* Section 5: Diabetes */}
+          {currentSection === 5 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Patient Diabétique</h3>
-                <p className="text-gray-600 text-sm">Section 6 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.diabetesPatientTitle')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section5Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optionnel)
+                  {t('assessment.descriptionOptional')}
                 </label>
                 <textarea
                   name="diabetesDescription"
                   value={formData.diabetesDescription}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Informations supplémentaires sur votre diabète..."
+                  placeholder={t('assessment.describeYourDiabetes')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Quel est votre type de diabète? <span className="text-red-500">*</span>
+                  {t('assessment.diabetesType')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {['Diabète de type 1', 'Diabète de type 2', 'Gestationnel (femme enceinte)'].map((type) => (
-                    <label key={type} className="flex items-center">
+                  {[
+                    { key: 'type1', label: t('assessment.diabetesType1') },
+                    { key: 'type2', label: t('assessment.diabetesType2') },
+                    { key: 'gestational', label: t('assessment.diabetesGestational') }
+                  ].map((type) => (
+                    <label key={type.key} className="flex items-center">
                       <input
                         type="radio"
                         name="diabetesType"
-                        value={type}
-                        checked={formData.diabetesType === type}
+                        value={type.key}
+                        checked={formData.diabetesType === type.key}
                         onChange={handleInputChange}
                         required
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{type}</span>
+                      <span className="ml-2 text-gray-700">{type.label}</span>
                     </label>
                   ))}
                 </div>
@@ -651,21 +694,26 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Depuis quand? <span className="text-red-500">*</span>
+                  {t('assessment.diabetesDurationLabel')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {['< 1 an', '1-5 ans', '> 5 ans', 'Autre'].map((duration) => (
-                    <label key={duration} className="flex items-center">
+                  {[
+                    { key: 'lessThan1Year', label: t('assessment.durationLessThan1Year') },
+                    { key: '1to5Years', label: t('assessment.duration1to5Years') },
+                    { key: 'moreThan5Years', label: t('assessment.durationMoreThan5Years') },
+                    { key: 'other', label: t('assessment.durationOther') }
+                  ].map((duration) => (
+                    <label key={duration.key} className="flex items-center">
                       <input
                         type="radio"
                         name="diabetesDuration"
-                        value={duration}
-                        checked={formData.diabetesDuration === duration}
+                        value={duration.key}
+                        checked={formData.diabetesDuration === duration.key}
                         onChange={handleInputChange}
                         required
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{duration}</span>
+                      <span className="ml-2 text-gray-700">{duration.label}</span>
                     </label>
                   ))}
                 </div>
@@ -673,21 +721,27 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Quel est votre traitement antidiabétique actuel? <span className="text-red-500">*</span>
+                  {t('assessment.diabetesCurrentTreatment')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {['Insuline basale', 'Insuline rapide', 'Antidiabétiques oraux', 'Régime alimentaire équilibré seul', 'Autre'].map((treatment) => (
-                    <label key={treatment} className="flex items-center">
+                  {[
+                    { key: 'basalInsulin', label: t('assessment.treatmentBasalInsulin') },
+                    { key: 'rapidInsulin', label: t('assessment.treatmentRapidInsulin') },
+                    { key: 'oralMedicines', label: t('assessment.treatmentOralMedicines') },
+                    { key: 'dietOnly', label: t('assessment.treatmentDietOnly') },
+                    { key: 'other', label: t('assessment.treatmentOther') }
+                  ].map((treatment) => (
+                    <label key={treatment.key} className="flex items-center">
                       <input
                         type="radio"
                         name="diabeticTreatment"
-                        value={treatment}
-                        checked={formData.diabeticTreatment === treatment}
+                        value={treatment.key}
+                        checked={formData.diabeticTreatment === treatment.key}
                         onChange={handleInputChange}
                         required
                         className="w-4 h-4 text-indigo-600"
                       />
-                      <span className="ml-2 text-gray-700">{treatment}</span>
+                      <span className="ml-2 text-gray-700">{treatment.label}</span>
                     </label>
                   ))}
                 </div>
@@ -695,18 +749,26 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Avez-vous d'autres maladies associées?
+                  {t('assessment.associatedDiseases')}
                 </label>
                 <div className="space-y-2">
-                  {['Maladie coeliaque', 'Maladie cardiovasculaire', 'Hypertension artérielle', 'Dyslipidémie', 'Maladies endocriniennes et hormonales (SOPK, dysthyroïdie, etc)', 'Obésité', 'Autre'].map((disease) => (
-                    <label key={disease} className="flex items-center">
+                  {[
+                    { key: 'celiac', label: t('assessment.diseaseCeliac') },
+                    { key: 'cardiovascular', label: t('assessment.diseaseCardiovascular') },
+                    { key: 'hypertension', label: t('assessment.diseaseHypertension') },
+                    { key: 'dyslipidemia', label: t('assessment.dyslipidemia') },
+                    { key: 'endocrine', label: t('assessment.diseaseEndocrine') },
+                    { key: 'obesity', label: t('assessment.diseaseObesity') },
+                    { key: 'other', label: t('assessment.diseaseOther') }
+                  ].map((disease) => (
+                    <label key={disease.key} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.associatedDiseases.includes(disease)}
-                        onChange={() => handleCheckboxChange('associatedDiseases', disease)}
+                        checked={formData.associatedDiseases.includes(disease.key)}
+                        onChange={() => handleCheckboxChange('associatedDiseases', disease.key)}
                         className="w-4 h-4 text-indigo-600 rounded"
                       />
-                      <span className="ml-2 text-gray-700">{disease}</span>
+                      <span className="ml-2 text-gray-700">{disease.label}</span>
                     </label>
                   ))}
                 </div>
@@ -714,80 +776,85 @@ export default function AssessmentPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Avez-vous une allergie ou intolérance alimentaire? <span className="text-red-500">*</span>
+                  {t('assessment.haveAllergiesOrIntolerances')} <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  {['Gluten', 'Lactose', 'Oeufs', 'Aucune', 'Autre'].map((allergy) => (
-                    <label key={allergy} className="flex items-center">
+                  {[
+                    { key: 'gluten', label: t('assessment.allergyGluten') },
+                    { key: 'lactose', label: t('assessment.allergyLactose') },
+                    { key: 'eggs', label: t('assessment.allergyEggs') },
+                    { key: 'none', label: t('assessment.allergyNone') },
+                    { key: 'other', label: t('assessment.allergyOther') }
+                  ].map((allergy) => (
+                    <label key={allergy.key} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.foodAllergiesIntolerances.includes(allergy)}
-                        onChange={() => handleCheckboxChange('foodAllergiesIntolerances', allergy)}
-                        required
+                        checked={formData.foodAllergiesIntolerances.includes(allergy.key)}
+                        onChange={() => handleCheckboxChange('foodAllergiesIntolerances', allergy.key)}
                         className="w-4 h-4 text-indigo-600 rounded"
                       />
-                      <span className="ml-2 text-gray-700">{allergy}</span>
+                      <span className="ml-2 text-gray-700">{allergy.label}</span>
                     </label>
                   ))}
                 </div>
-                {formData.foodAllergiesIntolerances.includes('Autre') && (
+                {formData.foodAllergiesIntolerances.includes('other') && (
                   <input
                     type="text"
                     name="otherAllergies"
                     value={formData.otherAllergies}
                     onChange={handleInputChange}
                     className="w-full mt-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                    placeholder="Veuillez spécifier"
+                    placeholder={t('assessment.pleaseSpecify')}
                   />
                 )}
               </div>
             </div>
           )}
 
-          {/* Section 7: Objectives */}
-          {currentSection === 7 && (
+          {/* Section 6: Objectives */}
+          {currentSection === 6 && (
             <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Objectifs et Motivation</h3>
-                <p className="text-gray-600 text-sm">Section 7 de 7</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{t('assessment.objectivesTitle')}</h3>
+                <p className="text-gray-600 text-sm">{t('assessment.section6Of6')}</p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description (Optionnel)
+                  {t('assessment.descriptionOptional')}
                 </label>
                 <textarea
                   name="objectivesDescription"
                   value={formData.objectivesDescription}
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="Décrivez vos motivations supplémentaires..."
+                  placeholder={t('assessment.describeYourMotivation')}
                   rows={3}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Quels sont vos objectifs en intégrant le programme Nutri Ed? (Question Type)
+                  {t('assessment.programObjectives')}
                 </label>
                 <div className="space-y-2">
                   {[
-                    'Mieux contrôler la glycémie',
-                    'Mieux comprendre le lien entre alimentation et diabète',
-                    'Adapter les doses d\'insuline en fonction des repas',
-                    'Prévenir les complications liées au diabète',
-                    'Renforcer l\'autonomie dans la gestion de la maladie',
-                    'Renforcer la motivation et l\'engagement',
-                    'Autre'
+                    { key: 'bloodSugar', label: t('assessment.objectiveBloodSugar') },
+                    { key: 'understandLink', label: t('assessment.objectiveUnderstandLink') },
+                    { key: 'insulinDoses', label: t('assessment.objectiveInsulinDoses') },
+                    { key: 'preventComplications', label: t('assessment.objectivePreventComplications') },
+                    { key: 'autonomy', label: t('assessment.objectiveAutonomy') },
+                    { key: 'motivation', label: t('assessment.objectiveMotivation') },
+                    { key: 'other', label: t('assessment.objectiveOther') }
                   ].map((objective) => (
-                    <label key={objective} className="flex items-center">
+                    <label key={objective.key} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.objectives.includes(objective)}
-                        onChange={() => handleCheckboxChange('objectives', objective)}
+                        checked={formData.objectives.includes(objective.key)}
+                        onChange={() => handleCheckboxChange('objectives', objective.key)}
                         className="w-4 h-4 text-indigo-600 rounded"
                       />
-                      <span className="ml-2 text-gray-700">{objective}</span>
+                      <span className="ml-2 text-gray-700">{objective.label}</span>
                     </label>
                   ))}
                 </div>
@@ -799,20 +866,20 @@ export default function AssessmentPage() {
           <div className="flex justify-between gap-4 mt-8">
             <button
               type="button"
-              onClick={() => setCurrentSection(Math.max(2, currentSection - 1))}
-              disabled={currentSection === 2}
+              onClick={() => setCurrentSection(getPreviousSection(currentSection))}
+              disabled={currentSection === 1}
               className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              Précédent
+              {t('assessment.previousButton')}
             </button>
 
-            {currentSection < 7 ? (
+            {currentSection < 6 ? (
               <button
                 type="button"
-                onClick={() => setCurrentSection(currentSection + 1)}
+                onClick={() => setCurrentSection(getNextSection(currentSection))}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition"
               >
-                Suivant
+                {t('assessment.nextButton')}
               </button>
             ) : (
               <button
@@ -820,7 +887,7 @@ export default function AssessmentPage() {
                 disabled={loading}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded-lg font-semibold transition"
               >
-                {loading ? 'Enregistrement...' : 'Soumettre l\'Évaluation'}
+                {loading ? t('assessment.savingAssessment') : t('assessment.submitAssessment')}
               </button>
             )}
           </div>
@@ -828,7 +895,7 @@ export default function AssessmentPage() {
 
         {/* Note */}
         <div className="mt-8 text-center text-gray-600 text-sm">
-          <p>Ce formulaire est obligatoire pour compléter votre profil.</p>
+          <p>{t('assessment.formRequiredNote')}</p>
         </div>
       </div>
     </div>
