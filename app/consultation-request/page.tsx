@@ -24,6 +24,7 @@ export default function ConsultationRequestPage() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [branding, setBranding] = useState<any>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -89,8 +90,8 @@ export default function ConsultationRequestPage() {
         // Show success notification
         addNotification({
           type: 'success',
-          title: 'Demande Soumise',
-          message: 'Votre demande de consultation a été soumise avec succès. Un administrateur l\'examinera bientôt.',
+          title: t('consultation.notifications.submitSuccess'),
+          message: t('consultation.notifications.submitSuccessDesc'),
           duration: 5000,
         });
       } else {
@@ -99,8 +100,8 @@ export default function ConsultationRequestPage() {
         // Show error notification
         addNotification({
           type: 'error',
-          title: 'Erreur',
-          message: data.error || 'Impossible de soumettre la demande. Veuillez réessayer.',
+          title: t('common.error'),
+          message: data.error || t('consultation.notifications.submitError'),
           duration: 4000,
         });
       }
@@ -111,8 +112,8 @@ export default function ConsultationRequestPage() {
       // Show error notification
       addNotification({
         type: 'error',
-        title: 'Erreur de Connexion',
-        message: 'Une erreur est survenue lors de la soumission de la demande.',
+        title: t('consultation.notifications.connectionError'),
+        message: t('consultation.notifications.connectionErrorDesc'),
         duration: 4000,
       });
     } finally {
@@ -145,51 +146,120 @@ export default function ConsultationRequestPage() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
-              <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
-                {branding?.logoUrl ? (
-                  <Image 
-                    src={branding.logoUrl} 
-                    alt={branding.siteName || 'NutriEd'} 
-                    width={100}
-                    height={100}
-                    className="h-8 sm:h-10 w-auto object-contain"
-                    priority
-                    quality={95}
-                  />
-                ) : (
-                  <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">{t('common.appName')}</h1>
-                )}
+            {/* Logo */}
+            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition">
+              {branding?.logoUrl ? (
+                <Image 
+                  src={branding.logoUrl} 
+                  alt={branding.siteName || 'NutriEd'} 
+                  width={100}
+                  height={100}
+                  className="h-8 sm:h-10 w-auto object-contain"
+                  priority
+                  quality={95}
+                />
+              ) : (
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600">{t('common.appName')}</h1>
+              )}
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex gap-4 md:gap-6">
+              <Link href="/dashboard" className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base">
+                {t('common.dashboard')}
               </Link>
-              <div className="hidden md:flex gap-6">
-                <Link href="/dashboard" className="text-gray-700 hover:text-indigo-600 font-medium">
-                  Tableau de Bord
-                </Link>
-                <Link href="/messages" className="text-gray-700 hover:text-indigo-600 font-medium">
-                  Messages
-                </Link>
-                <Link href="/consultation-request" className="text-indigo-600 hover:text-indigo-700 font-medium border-b-2 border-indigo-600">
-                  Consultation
-                </Link>
-                <Link href="/appointments" className="text-gray-700 hover:text-indigo-600 font-medium">
-                  Rendez-vous
-                </Link>
-                <Link href="/profile" className="text-gray-700 hover:text-indigo-600 font-medium">
-                  Profil
-                </Link>
-              </div>
+              <Link href="/messages" className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base">
+                {t('common.messages')}
+              </Link>
+              <Link href="/consultation-request" className="text-indigo-600 hover:text-indigo-700 font-medium text-sm md:text-base border-b-2 border-indigo-600">
+                {t('common.consultation')}
+              </Link>
+              <Link href="/appointments" className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base">
+                {t('common.appointments')}
+              </Link>
+              <Link href="/profile" className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base">
+                {t('common.profile')}
+              </Link>
             </div>
-            <div className="flex items-center gap-4">
+
+            {/* Mobile & Desktop Right Section */}
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <LanguageSwitcher />
-              <span className="text-sm text-gray-600">{session.user?.name}</span>
+              <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[100px] md:max-w-none">{session.user?.name}</span>
+              
+              {/* Desktop Logout Button */}
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className="hidden md:block bg-red-600 hover:bg-red-700 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium"
+              >
+                {t('common.logout')}
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+              <Link
+                href="/dashboard"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.dashboard')}
+              </Link>
+              <Link
+                href="/messages"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.messages')}
+              </Link>
+              <Link
+                href="/consultation-request"
+                className="block px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg font-medium text-sm bg-indigo-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.consultation')}
+              </Link>
+              <Link
+                href="/appointments"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.appointments')}
+              </Link>
+              <Link
+                href="/profile"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.profile')}
+              </Link>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium text-sm mt-2"
               >
                 {t('common.logout')}
               </button>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 
@@ -207,7 +277,7 @@ export default function ConsultationRequestPage() {
                     : 'text-gray-700 hover:text-indigo-600'
                 }`}
               >
-                Demander une Consultation
+                {t('consultation.tabs.request')}
               </button>
               <button
                 onClick={() => setActiveTab('status')}
@@ -217,7 +287,7 @@ export default function ConsultationRequestPage() {
                     : 'text-gray-700 hover:text-indigo-600'
                 }`}
               >
-                Statut de Votre Demande
+                {t('consultation.tabs.status')}
               </button>
             </div>
           </div>
@@ -227,9 +297,9 @@ export default function ConsultationRequestPage() {
             {/* Request Tab */}
             {activeTab === 'request' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Demander une Consultation</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('consultation.form.heading')}</h2>
                 <p className="text-gray-600 mb-6">
-                  Remplissez ce formulaire pour demander une consultation avec un spécialiste en nutrition. Un administrateur examinera votre demande et vous assignera un spécialiste.
+                  {t('consultation.form.description')}
                 </p>
 
                 {message && (
@@ -248,39 +318,39 @@ export default function ConsultationRequestPage() {
                   {/* Consultation Type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type de Consultation
+                      {t('consultation.form.type')}
                     </label>
                     <select
                       value={consultationType}
                       onChange={(e) => setConsultationType(e.target.value as any)}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                     >
-                      <option value="initial">Consultation Initiale</option>
-                      <option value="follow-up">Suivi</option>
-                      <option value="specific-concern">Préoccupation Spécifique</option>
+                      <option value="initial">{t('consultation.form.typeInitial')}</option>
+                      <option value="follow-up">{t('consultation.form.typeFollowUp')}</option>
+                      <option value="specific-concern">{t('consultation.form.typeSpecificConcern')}</option>
                     </select>
                   </div>
 
                   {/* Goals */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Vos Objectifs de Santé
+                      {t('consultation.form.goals')}
                     </label>
                     <textarea
                       value={goals}
                       onChange={(e) => setGoals(e.target.value)}
                       required
-                      placeholder="Décrivez vos objectifs de santé et de bien-être..."
+                      placeholder={t('consultation.form.goalsPlaceholder')}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                       rows={4}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Minimum 10 caractères requis</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('consultation.form.goalsHelp')}</p>
                   </div>
 
                   {/* Urgency */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Niveau d'Urgence
+                      {t('consultation.form.urgency')}
                     </label>
                     <div className="flex gap-4">
                       {['low', 'medium', 'high'].map((level) => (
@@ -294,9 +364,9 @@ export default function ConsultationRequestPage() {
                             className="mr-2"
                           />
                           <span className="text-sm text-gray-700">
-                            {level === 'low' && 'Faible'}
-                            {level === 'medium' && 'Moyen'}
-                            {level === 'high' && 'Élevé'}
+                            {level === 'low' && t('consultation.form.urgencyLow')}
+                            {level === 'medium' && t('consultation.form.urgencyMedium')}
+                            {level === 'high' && t('consultation.form.urgencyHigh')}
                           </span>
                         </label>
                       ))}
@@ -306,12 +376,12 @@ export default function ConsultationRequestPage() {
                   {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Notes Supplémentaires (Optionnel)
+                      {t('consultation.form.notes')}
                     </label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Informations supplémentaires qui pourraient être utiles..."
+                      placeholder={t('consultation.form.notesPlaceholder')}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
                       rows={3}
                     />
@@ -322,7 +392,7 @@ export default function ConsultationRequestPage() {
                     disabled={loading}
                     className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-3 rounded-lg transition"
                   >
-                    {loading ? 'Envoi en cours...' : 'Soumettre la Demande'}
+                    {loading ? t('consultation.form.submitting') : t('consultation.form.submitButton')}
                   </button>
                 </form>
               </div>
@@ -331,16 +401,16 @@ export default function ConsultationRequestPage() {
             {/* Status Tab */}
             {activeTab === 'status' && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Statut de Votre Demande</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('consultation.status.heading')}</h2>
 
                 {requests.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-600 mb-4">Vous n'avez pas encore soumis de demande de consultation.</p>
+                    <p className="text-gray-600 mb-4">{t('consultation.status.empty')}</p>
                     <button
                       onClick={() => setActiveTab('request')}
                       className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold"
                     >
-                      Soumettre une Demande
+                      {t('consultation.status.submitButton')}
                     </button>
                   </div>
                 ) : (
@@ -354,13 +424,13 @@ export default function ConsultationRequestPage() {
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900">
                               {request.consultationType === 'initial'
-                                ? 'Consultation Initiale'
+                                ? t('consultation.form.typeInitial')
                                 : request.consultationType === 'follow-up'
-                                ? 'Suivi'
-                                : 'Préoccupation Spécifique'}
+                                ? t('consultation.form.typeFollowUp')
+                                : t('consultation.form.typeSpecificConcern')}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              Soumis le {new Date(request.createdAt).toLocaleDateString('fr-FR')}
+                              {t('consultation.status.submitted')} {new Date(request.createdAt).toLocaleDateString('ar-SA')}
                             </p>
                           </div>
                           <span
@@ -373,10 +443,10 @@ export default function ConsultationRequestPage() {
                             }`}
                           >
                             {request.status === 'pending'
-                              ? 'En Attente'
+                              ? t('consultation.status.pending')
                               : request.status === 'assigned'
-                              ? 'Assigné'
-                              : 'Rejeté'}
+                              ? t('consultation.status.assigned')
+                              : t('consultation.status.rejected')}
                           </span>
                         </div>
 
@@ -385,7 +455,7 @@ export default function ConsultationRequestPage() {
                         {request.status === 'assigned' && (
                           <div className="bg-indigo-50 border border-indigo-200 rounded p-3 mb-3">
                             <p className="text-sm text-indigo-900">
-                              <strong>Spécialiste Assigné:</strong> {request.assignedSpecialistName}
+                              <strong>{t('consultation.status.assignedSpecialist')}</strong> {request.assignedSpecialistName}
                             </p>
                             <p className="text-sm text-indigo-700 mt-2">
                               {t('appointments.appointmentNowAvailable')}
@@ -396,13 +466,13 @@ export default function ConsultationRequestPage() {
                         {request.status === 'rejected' && (
                           <div className="bg-red-50 border border-red-200 rounded p-3">
                             <p className="text-sm text-red-900">
-                              <strong>Raison du Rejet:</strong> {request.rejectionReason}
+                              <strong>{t('consultation.status.rejectionReason')}</strong> {request.rejectionReason}
                             </p>
                           </div>
                         )}
 
                         <div className="text-xs text-gray-500 mt-3">
-                          Urgence: {request.urgency === 'low' ? 'Faible' : request.urgency === 'medium' ? 'Moyen' : 'Élevé'}
+                          {t('consultation.status.urgencyLabel')} {request.urgency === 'low' ? t('consultation.form.urgencyLow') : request.urgency === 'medium' ? t('consultation.form.urgencyMedium') : t('consultation.form.urgencyHigh')}
                         </div>
                       </div>
                     ))}

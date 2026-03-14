@@ -541,6 +541,13 @@ export default function AdminPage() {
   const [isEditingUser, setIsEditingUser] = useState(false);
   const [editingUserData, setEditingUserData] = useState<any>(null);
   const [isSavingUser, setIsSavingUser] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
+  const [showConsultationModal, setShowConsultationModal] = useState(false);
+  const [consultationAction, setConsultationAction] = useState<'assign' | 'reject' | null>(null);
+  const [assignedSpecialistId, setAssignedSpecialistId] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [savingConsultation, setSavingConsultation] = useState(false);
   const [newContent, setNewContent] = useState({
     title: '',
     type: '',
@@ -1044,6 +1051,73 @@ export default function AdminPage() {
     }
   };
 
+  const openConsultationModal = (consultation: any, action: 'assign' | 'reject') => {
+    setSelectedConsultation(consultation);
+    setConsultationAction(action);
+    setAssignedSpecialistId('');
+    setRejectionReason('');
+    setShowConsultationModal(true);
+  };
+
+  const closeConsultationModal = () => {
+    setShowConsultationModal(false);
+    setSelectedConsultation(null);
+    setConsultationAction(null);
+    setAssignedSpecialistId('');
+    setRejectionReason('');
+  };
+
+  const saveConsultationChanges = async () => {
+    if (consultationAction === 'assign' && !assignedSpecialistId) {
+      alert('Veuillez sélectionner un spécialiste');
+      return;
+    }
+
+    if (consultationAction === 'reject' && !rejectionReason.trim()) {
+      alert('Veuillez fournir une raison de rejet');
+      return;
+    }
+
+    setSavingConsultation(true);
+    try {
+      const body: any = {
+        requestId: selectedConsultation._id,
+        action: consultationAction,
+      };
+
+      if (consultationAction === 'assign') {
+        body.specialistId = assignedSpecialistId;
+      } else if (consultationAction === 'reject') {
+        body.reason = rejectionReason;
+      }
+
+      const res = await fetch('/api/consultation-request', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        const updatedRequest = await res.json();
+        setConsultationRequests(
+          consultationRequests.map((req) =>
+            req._id === updatedRequest._id ? updatedRequest : req
+          )
+        );
+        alert(consultationAction === 'assign' ? 'Spécialiste assigné avec succès' : 'Demande rejetée');
+        closeConsultationModal();
+      } else {
+        const error = await res.json();
+        alert(`Erreur: ${error.error || 'Impossible de mettre à jour la demande'}`);
+      }
+    } catch (error) {
+      console.error('Failed to save consultation:', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setSavingConsultation(false);
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -1080,6 +1154,8 @@ export default function AdminPage() {
                 )}
               </div>
             </div>
+            
+            {/* Desktop Navigation */}
             <div className="hidden md:flex gap-2 lg:gap-4 items-center">
               <LanguageSwitcher />
               <Link
@@ -1095,16 +1171,46 @@ export default function AdminPage() {
                 Déconnexion
               </button>
             </div>
+
+            {/* Mobile Menu Button */}
             <div className="md:hidden flex items-center gap-2">
               <LanguageSwitcher />
               <button
-                onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs font-medium"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none"
               >
-                Déc.
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
               </button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+              <Link
+                href="/dashboard"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <button
+                onClick={() => {
+                  handleSignOut();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium text-sm"
+              >
+                Déconnexion
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -1333,7 +1439,7 @@ export default function AdminPage() {
                         <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-4">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{content.title}</h3>
-                            <p className="text-xs sm:text-sm text-gray-600">{content.type} • {content.category}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">{content.type} • {content.category && categories.find((c: any) => c.slug === content.category) ? (language === 'ar' && categories.find((c: any) => c.slug === content.category)?.nameAr ? categories.find((c: any) => c.slug === content.category)?.nameAr : categories.find((c: any) => c.slug === content.category)?.name) : content.category}</p>
                             <p className="text-xs sm:text-sm text-gray-500 mt-2 line-clamp-2">{content.description}</p>
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
@@ -1464,7 +1570,7 @@ export default function AdminPage() {
                     {consultationRequests.map((request: any) => (
                       <div key={request._id} className="border border-gray-200 rounded-lg p-3 sm:p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-3 mb-3">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{request.userName}</h3>
                             <p className="text-xs sm:text-sm text-gray-600">{request.userEmail}</p>
                           </div>
@@ -1478,7 +1584,7 @@ export default function AdminPage() {
                             {request.status}
                           </span>
                         </div>
-                        <div className="space-y-1 text-xs sm:text-sm text-gray-600">
+                        <div className="space-y-1 text-xs sm:text-sm text-gray-600 mb-3">
                           <p><strong>Type:</strong> {request.consultationType}</p>
                           <p><strong>Urgence:</strong> {request.urgency}</p>
                           <p className="line-clamp-1"><strong>Objectifs:</strong> {request.goals}</p>
@@ -1486,9 +1592,35 @@ export default function AdminPage() {
                             <p><strong>Spécialiste:</strong> {request.assignedSpecialistName}</p>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-gray-500 mb-3">
                           {new Date(request.createdAt).toLocaleDateString('fr-FR')}
                         </p>
+                        
+                        {/* Action Buttons */}
+                        {request.status === 'pending' && (
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                            <button
+                              onClick={() => openConsultationModal(request, 'assign')}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                            >
+                              Assigner Spécialiste
+                            </button>
+                            <button
+                              onClick={() => openConsultationModal(request, 'reject')}
+                              className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                            >
+                              Rejeter
+                            </button>
+                          </div>
+                        )}
+                        {request.status === 'assigned' && (
+                          <button
+                            onClick={() => openConsultationModal(request, 'reject')}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors"
+                          >
+                            Révoquer Assignation
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -2680,6 +2812,96 @@ export default function AdminPage() {
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors"
               >
                 {isEditingCategory ? 'Mettre à jour' : 'Créer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Consultation Modal */}
+      {showConsultationModal && selectedConsultation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col my-4 sm:my-0">
+            <div className="border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center flex-shrink-0">
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+                {consultationAction === 'assign' ? 'Assigner Spécialiste' : 'Rejeter Demande'}
+              </h3>
+              <button
+                onClick={closeConsultationModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold ml-4 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
+              {/* Consultation Request Info */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-3">Informations de la Demande</h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Utilisateur:</strong> {selectedConsultation.userName} ({selectedConsultation.userEmail})</p>
+                  <p><strong>Type:</strong> {selectedConsultation.consultationType}</p>
+                  <p><strong>Urgence:</strong> {selectedConsultation.urgency}</p>
+                  <p><strong>Objectifs:</strong> {selectedConsultation.goals}</p>
+                  <p><strong>Date:</strong> {new Date(selectedConsultation.createdAt).toLocaleDateString('fr-FR')}</p>
+                </div>
+              </div>
+
+              {consultationAction === 'assign' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sélectionner un Spécialiste *
+                  </label>
+                  <select
+                    value={assignedSpecialistId}
+                    onChange={(e) => setAssignedSpecialistId(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  >
+                    <option value="">-- Sélectionner un spécialiste --</option>
+                    {users
+                      .filter((user: any) => user.role === 'admin')
+                      .map((user: any) => (
+                        <option key={user._id} value={user._id}>
+                          {user.name} ({user.email})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              {consultationAction === 'reject' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Raison du Rejet *
+                  </label>
+                  <textarea
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Expliquez pourquoi cette demande est rejetée..."
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex justify-end gap-3">
+              <button
+                onClick={closeConsultationModal}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={saveConsultationChanges}
+                disabled={savingConsultation}
+                className={`px-4 py-2 font-semibold rounded-lg transition-colors text-white ${
+                  consultationAction === 'assign'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                } disabled:opacity-50`}
+              >
+                {savingConsultation ? 'Traitement...' : (consultationAction === 'assign' ? 'Assigner' : 'Rejeter')}
               </button>
             </div>
           </div>

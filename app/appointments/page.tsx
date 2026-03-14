@@ -30,6 +30,7 @@ export default function AppointmentsPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -249,44 +250,120 @@ export default function AppointmentsPage() {
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
-              <h1 className="text-lg sm:text-2xl font-bold text-indigo-600">NutriEd</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageSwitcher />
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600">{t('common.appointments')}</h1>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex gap-4 md:gap-6">
               <Link
                 href="/dashboard"
-                className="text-gray-700 hover:text-indigo-600 font-medium"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                {t('appointments.dashboard')}
+                {t('common.dashboard')}
               </Link>
               <Link
                 href="/messages"
-                className="text-gray-700 hover:text-indigo-600 font-medium"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                {t('appointments.messages')}
+                {t('common.messages')}
               </Link>
               <Link
                 href="/consultation-request"
-                className="text-gray-700 hover:text-indigo-600 font-medium"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                {t('appointments.consultation')}
+                {t('common.consultation')}
+              </Link>
+              <Link
+                href="/appointments"
+                className="text-indigo-600 hover:text-indigo-700 font-medium text-sm md:text-base border-b-2 border-indigo-600"
+              >
+                {t('common.appointments')}
               </Link>
               <Link
                 href="/profile"
-                className="text-gray-700 hover:text-indigo-600 font-medium"
+                className="text-gray-700 hover:text-indigo-600 font-medium text-sm md:text-base"
               >
-                {t('appointments.profile')}
+                {t('common.profile')}
               </Link>
-              <span className="text-sm text-gray-600">{session.user?.name}</span>
+            </div>
+
+            {/* Mobile & Desktop Right Section */}
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+              <LanguageSwitcher />
+              <span className="hidden sm:inline text-xs md:text-sm text-gray-600 truncate max-w-[100px] md:max-w-none">{session.user?.name}</span>
+              
+              {/* Desktop Logout Button */}
               <button
                 onClick={() => signOut({ redirect: true, callbackUrl: '/auth/login' })}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                className="hidden md:block bg-red-600 hover:bg-red-700 text-white px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium"
+              >
+                {t('common.logout')}
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden inline-flex items-center justify-center p-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {mobileMenuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Navigation Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-3 space-y-2">
+              <Link
+                href="/dashboard"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.dashboard')}
+              </Link>
+              <Link
+                href="/messages"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.messages')}
+              </Link>
+              <Link
+                href="/consultation-request"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.consultation')}
+              </Link>
+              <Link
+                href="/appointments"
+                className="block px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg font-medium text-sm bg-indigo-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.appointments')}
+              </Link>
+              <Link
+                href="/profile"
+                className="block px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-sm"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {t('common.profile')}
+              </Link>
+              <button
+                onClick={() => {
+                  signOut({ redirect: true, callbackUrl: '/auth/login' });
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium text-sm mt-2"
               >
                 {t('common.logout')}
               </button>
             </div>
-          </div>
+          )}
         </div>
       </nav>
 

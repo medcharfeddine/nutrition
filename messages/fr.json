@@ -409,7 +409,49 @@
     "title": "Demandes de Consultation",
     "request": "Demander une consultation",
     "requestSubmitted": "✅ Votre demande de consultation a été soumise! Un administrateur l'examinera bientôt.",
-    "failedToSubmit": "Échec de la soumission de la demande"
+    "failedToSubmit": "Échec de la soumission de la demande",
+    "tabs": {
+      "request": "Demander une Consultation",
+      "status": "Statut de Votre Demande"
+    },
+    "form": {
+      "heading": "Demander une Consultation",
+      "description": "Remplissez ce formulaire pour demander une consultation avec un spécialiste en nutrition. Un administrateur examinera votre demande et vous assignera un spécialiste.",
+      "type": "Type de Consultation",
+      "typeInitial": "Consultation Initiale",
+      "typeFollowUp": "Suivi",
+      "typeSpecificConcern": "Préoccupation Spécifique",
+      "goals": "Vos Objectifs de Santé",
+      "goalsPlaceholder": "Décrivez vos objectifs de santé et de bien-être...",
+      "goalsHelp": "Minimum 10 caractères requis",
+      "urgency": "Niveau d'Urgence",
+      "urgencyLow": "Faible",
+      "urgencyMedium": "Moyen",
+      "urgencyHigh": "Élevé",
+      "notes": "Notes Supplémentaires (Optionnel)",
+      "notesPlaceholder": "Informations supplémentaires qui pourraient être utiles...",
+      "submitButton": "Soumettre la Demande",
+      "submitting": "Envoi en cours..."
+    },
+    "status": {
+      "heading": "Statut de Votre Demande",
+      "empty": "Vous n'avez pas encore soumis de demande de consultation.",
+      "submitButton": "Soumettre une Demande",
+      "submitted": "Soumis le",
+      "pending": "En Attente",
+      "assigned": "Assigné",
+      "rejected": "Rejeté",
+      "assignedSpecialist": "Spécialiste Assigné:",
+      "rejectionReason": "Raison du Rejet:",
+      "urgencyLabel": "Urgence:"
+    },
+    "notifications": {
+      "submitSuccess": "Demande Soumise",
+      "submitSuccessDesc": "Votre demande de consultation a été soumise avec succès. Un administrateur l'examinera bientôt.",
+      "submitError": "Impossible de soumettre la demande. Veuillez réessayer.",
+      "connectionError": "Erreur de Connexion",
+      "connectionErrorDesc": "Une erreur est survenue lors de la soumission de la demande."
+    }
   },
   "resources": {
     "title": "Ressources Éducatives",

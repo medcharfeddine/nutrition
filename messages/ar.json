@@ -431,7 +431,49 @@
     "title": "طلبات الاستشارة",
     "request": "طلب استشارة",
     "requestSubmitted": "✅ تم إرسال طلب الاستشارة! سيقوم المسؤول بمراجعته قريباً.",
-    "failedToSubmit": "فشل إرسال الطلب"
+    "failedToSubmit": "فشل إرسال الطلب",
+    "tabs": {
+      "request": "طلب استشارة",
+      "status": "حالة طلبتك"
+    },
+    "form": {
+      "heading": "طلب استشارة",
+      "description": "يرجى ملء هذا النموذج لطلب استشارة مع متخصص في التغذية. سيقوم المسؤول بمراجعة طلبك وتعيين متخصص لك.",
+      "type": "نوع الاستشارة",
+      "typeInitial": "استشارة أولى",
+      "typeFollowUp": "متابعة",
+      "typeSpecificConcern": "قضية محددة",
+      "goals": "أهدافك الصحية",
+      "goalsPlaceholder": "صف أهدافك الصحية والعافية...",
+      "goalsHelp": "الحد الأدنى 10 أحرف مطلوبة",
+      "urgency": "مستوى الاستعجالية",
+      "urgencyLow": "منخفضة",
+      "urgencyMedium": "متوسطة",
+      "urgencyHigh": "عالية",
+      "notes": "ملاحظات إضافية (اختياري)",
+      "notesPlaceholder": "معلومات إضافية قد تكون مفيدة...",
+      "submitButton": "إرسال الطلب",
+      "submitting": "جاري الإرسال..."
+    },
+    "status": {
+      "heading": "حالة طلبتك",
+      "empty": "لم تقدم أي طلب استشارة حتى الآن.",
+      "submitButton": "إرسال طلب",
+      "submitted": "تم التقديم في",
+      "pending": "قيد الانتظار",
+      "assigned": "معين",
+      "rejected": "مرفوض",
+      "assignedSpecialist": "المتخصص المعين:",
+      "rejectionReason": "سبب الرفض:",
+      "urgencyLabel": "مستوى الاستعجالية:"
+    },
+    "notifications": {
+      "submitSuccess": "تم إرسال الطلب",
+      "submitSuccessDesc": "تم إرسال طلب الاستشارة بنجاح. سيقوم المسؤول بمراجعته قريباً.",
+      "submitError": "تعذر إرسال الطلب. يرجى المحاولة مرة أخرى.",
+      "connectionError": "خطأ في الاتصال",
+      "connectionErrorDesc": "حدث خطأ أثناء محاولة إرسال الطلب."
+    }
   },
   "resources": {
     "title": "الموارد التعليمية",

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth';
 import connectDB from '@/lib/db';
 import Content from '@/models/Content';
 import Category from '@/models/Category';
+import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 
 const contentSchema = z.object({
@@ -31,7 +32,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ contents });
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    console.error('Content GET error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -61,12 +64,15 @@ export async function POST(req: NextRequest) {
 
     // Validate category exists in database if provided
     if (validatedData.data.category) {
-      const categoryExists = await Category.findOne({
-        $or: [
-          { slug: validatedData.data.category },
-          { _id: validatedData.data.category }
-        ]
-      });
+      const categoryQuery: any = { slug: validatedData.data.category };
+      
+      // Only add _id check if it's a valid ObjectId to prevent casting errors
+      if (isValidObjectId(validatedData.data.category)) {
+        categoryQuery._id = validatedData.data.category;
+        delete categoryQuery.slug;
+      }
+
+      const categoryExists = await Category.findOne(categoryQuery);
 
       if (!categoryExists) {
         return NextResponse.json(
@@ -86,7 +92,9 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    console.error('Content POST error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -120,12 +128,15 @@ export async function PUT(req: NextRequest) {
 
     // Validate category exists in database if provided
     if (validatedData.data.category) {
-      const categoryExists = await Category.findOne({
-        $or: [
-          { slug: validatedData.data.category },
-          { _id: validatedData.data.category }
-        ]
-      });
+      const categoryQuery: any = { slug: validatedData.data.category };
+      
+      // Only add _id check if it's a valid ObjectId to prevent casting errors
+      if (isValidObjectId(validatedData.data.category)) {
+        categoryQuery._id = validatedData.data.category;
+        delete categoryQuery.slug;
+      }
+
+      const categoryExists = await Category.findOne(categoryQuery);
 
       if (!categoryExists) {
         return NextResponse.json(
@@ -146,7 +157,9 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ message: 'Contenu mis a jour avec succes', content });
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    console.error('Content PUT error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
@@ -171,6 +184,8 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: 'Contenu supprime avec succes' });
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur interne du serveur' }, { status: 500 });
+    console.error('Content DELETE error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur interne du serveur';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
