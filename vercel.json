@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/upload/route.ts": {
-      "maxDuration": 400,
+      "maxDuration": 300,
       "memory": 3008
     }
   }
