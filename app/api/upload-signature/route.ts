@@ -33,11 +33,10 @@ export async function POST(req: NextRequest) {
     const timestamp = Math.floor(Date.now() / 1000);
     const publicId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    // Build the string to sign
-    const paramsToSign = {
+    // Only these parameters are signed
+    const paramsToSign: { [key: string]: any } = {
       folder,
       public_id: publicId,
-      resource_type,
       timestamp,
     };
 
