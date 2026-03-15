@@ -2,8 +2,7 @@
   "functions": {
     "app/api/upload/route.ts": {
       "maxDuration": 300,
-      "memory": 2048,
-      "maxBodySize": "500mb"
+      "memory": 2048
     }
   }
 }
