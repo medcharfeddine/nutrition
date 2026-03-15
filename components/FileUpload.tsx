@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useCloudinaryUpload } from '@/lib/use-cloudinary-upload';
 
 interface FileUploadProps {
   onSuccess: (url: string, publicId: string) => void;
@@ -24,10 +23,67 @@ export default function FileUpload({
 }: FileUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { uploadFile, loading, error, clearError } = useCloudinaryUpload();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadToCloudinary = async (file: File) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Get upload signature from backend
+      const signatureRes = await fetch('/api/upload-signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folder: type === 'video' ? 'nutrition-app/videos' : 'nutrition-app/images',
+          resource_type: type === 'video' ? 'video' : 'image',
+        }),
+      });
+
+      if (!signatureRes.ok) {
+        const errorData = await signatureRes.json();
+        throw new Error(errorData.error || 'Impossible de generer la signature');
+      }
+
+      const { signature, timestamp, cloudName, publicId, apiKey } = await signatureRes.json();
+
+      // Create FormData for Cloudinary
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp.toString());
+      formData.append('signature', signature);
+      formData.append('public_id', publicId);
+      formData.append('resource_type', type === 'video' ? 'video' : 'image');
+      formData.append('folder', type === 'video' ? 'nutrition-app/videos' : 'nutrition-app/images');
+      formData.append('quality', 'auto:eco');
+      formData.append('fetch_format', 'auto');
+
+      // Upload directly to Cloudinary
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${type === 'video' ? 'video' : 'image'}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData.error?.message || 'Erreur lors du telechargement');
+      }
+
+      const result = await uploadRes.json();
+      onSuccess(result.secure_url, result.public_id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(message);
+      if (onError) onError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileSelect = async (file: File) => {
-    clearError();
+    setError(null);
 
     // Validate file type
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -36,6 +92,7 @@ export default function FileUpload({
 
     if (!allowedTypes.includes(file.type)) {
       const message = `Type de fichier invalide. Accepte: ${type === 'video' ? 'MP4, WebM, MOV' : 'JPEG, PNG, GIF, WebP'}`;
+      setError(message);
       if (onError) onError(message);
       return;
     }
@@ -43,16 +100,12 @@ export default function FileUpload({
     // Validate file size
     if (file.size > maxSize * 1024 * 1024) {
       const message = `Fichier trop volumineux. Max: ${maxSize}MB`;
+      setError(message);
       if (onError) onError(message);
       return;
     }
 
-    const result = await uploadFile(file, type);
-    if (result) {
-      onSuccess(result.url, result.publicId);
-    } else if (onError && error) {
-      onError(error);
-    }
+    await uploadToCloudinary(file);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,7 +149,7 @@ export default function FileUpload({
             ? 'border-indigo-500 bg-indigo-50'
             : 'border-gray-300 hover:border-indigo-400'
         }`}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => !loading && fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}
@@ -111,7 +164,7 @@ export default function FileUpload({
           {loading ? (
             <>
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <p className="text-gray-600">Téléchargement en cours...</p>
+              <p className="text-gray-600">Telechargement en cours...</p>
             </>
           ) : (
             <>
@@ -129,7 +182,7 @@ export default function FileUpload({
               </svg>
               <p className="text-gray-700 font-semibold">{buttonText}</p>
               <p className="text-sm text-gray-500">
-                ou glissez-déposez votre fichier ici
+                ou glissez-deposez votre fichier ici
               </p>
               <p className="text-xs text-gray-400">
                 Max {maxSize}MB - {type === 'video' ? 'MP4, WebM, MOV' : 'JPEG, PNG, GIF, WebP'}
