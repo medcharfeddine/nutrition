@@ -9,8 +9,21 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Route segment config for Vercel deployment
+export const maxDuration = 300; // 5 minutes
+export const revalidate = 0; // Disable caching for uploads
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
+    // Verify Cloudinary configuration
+    if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      console.error('Cloudinary configuration missing');
+      return NextResponse.json(
+        { error: 'Configuration serveur invalide' },
+        { status: 500 }
+      );
+    }
+
     const session = await auth();
 
     if (!session || !session.user) {
@@ -52,38 +65,59 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // Upload to Cloudinary
     return new Promise<Response>((resolve) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: fileType === 'video' ? 'video' : 'auto',
-          folder: fileType === 'video' ? 'nutrition-app/videos' : 'nutrition-app/images',
-          public_id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-          quality: 'auto:eco',
-          fetch_format: 'auto',
-        },
-        (error, result) => {
-          if (error) {
-            resolve(
-              NextResponse.json(
-                { error: 'Erreur lors du téléchargement du fichier' },
-                { status: 500 }
-              )
-            );
-          } else {
-            resolve(
-              NextResponse.json(
-                {
-                  message: 'Fichier téléchargé avec succès',
-                  url: result?.secure_url,
-                  publicId: result?.public_id,
-                },
-                { status: 201 }
-              )
-            );
+      try {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: fileType === 'video' ? 'video' : 'auto',
+            folder: fileType === 'video' ? 'nutrition-app/videos' : 'nutrition-app/images',
+            public_id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
+            quality: 'auto:eco',
+            fetch_format: 'auto',
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              resolve(
+                NextResponse.json(
+                  { error: `Erreur lors du téléchargement: ${error.message || 'Unknown error'}` },
+                  { status: 500 }
+                )
+              );
+            } else if (result) {
+              resolve(
+                NextResponse.json(
+                  {
+                    message: 'Fichier téléchargé avec succès',
+                    url: result.secure_url,
+                    publicId: result.public_id,
+                  },
+                  { status: 201 }
+                )
+              );
+            }
           }
-        }
-      );
+        );
 
-      uploadStream.end(buffer);
+        uploadStream.on('error', (error) => {
+          console.error('Upload stream error:', error);
+          resolve(
+            NextResponse.json(
+              { error: `Erreur flux: ${error.message || 'Stream error'}` },
+              { status: 500 }
+            )
+          );
+        });
+
+        uploadStream.end(buffer);
+      } catch (streamError) {
+        console.error('Stream creation error:', streamError);
+        resolve(
+          NextResponse.json(
+            { error: `Erreur création flux: ${streamError instanceof Error ? streamError.message : 'Unknown error'}` },
+            { status: 500 }
+          )
+        );
+      }
     });
   } catch (error) {
     console.error('Upload error:', error);

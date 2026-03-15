@@ -4,9 +4,9 @@ export interface IContent extends Document {
   title: string;
   type: 'video' | 'post' | 'infographic';
   description: string;
-  mediaUrl: string;
+  mediaUrl?: string;
   content?: string;
-  category?: string;
+  category?: mongoose.Types.ObjectId;
   tags?: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -32,16 +32,15 @@ const ContentSchema: Schema<IContent> = new Schema(
     },
     mediaUrl: {
       type: String,
-      required: [true, 'Please provide a media URL'],
+      required: false,
     },
     content: {
       type: String,
       maxlength: [5000, 'Content cannot be more than 5000 characters'],
     },
     category: {
-      type: String,
-      // Allow any string value to support dynamic categories from the Category collection
-      // Previously had enum constraint, now flexible for syncing with actual categories
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
     },
     tags: [String],
   },

@@ -11,14 +11,13 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 export default function ResourcesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [contents, setContents] = useState<any[]>([]);
   const [filteredContents, setFilteredContents] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPost, setSelectedPost] = useState<any>(null);
   const [likes, setLikes] = useState<{ [key: string]: boolean }>({});
   const [likeCount, setLikeCount] = useState<{ [key: string]: number }>({});
   const [branding, setBranding] = useState<any>(null);
@@ -33,17 +32,22 @@ export default function ResourcesPage() {
       fetchCategories();
       fetchBranding();
     }
-  }, [status, router]);
+  }, [status, router, language]);
 
   const fetchBranding = async () => {
     try {
-      const res = await fetch('/api/admin/branding');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      const res = await fetch('/api/admin/branding', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       if (res.ok) {
         const data = await res.json();
         setBranding(data.branding);
       }
     } catch (error) {
-      console.error('Failed to fetch branding:', error);
+      // Silently fail - don't spam console
     }
   };
 
@@ -67,12 +71,12 @@ export default function ResourcesPage() {
       const res = await fetch('/api/admin/categories');
       if (res.ok) {
         const data = await res.json();
-        // Format categories for filter display
+        // Format categories for filter display - use the appropriate language name
         const formattedCategories = [
           { value: 'all', label: t('resources.allResources') },
           ...data.categories.map((cat: any) => ({
             value: cat.slug,
-            label: getCategoryLabel(cat.slug),
+            label: language === 'ar' ? (cat.nameAr || cat.name) : cat.name,
           })),
         ];
         setCategories(formattedCategories);
@@ -98,8 +102,13 @@ export default function ResourcesPage() {
       const res = await fetch('/api/admin/content');
       if (res.ok) {
         const data = await res.json();
-        setContents(data.contents);
-        setFilteredContents(data.contents);
+        // Rename populated category to categoryData for consistent rendering
+        const contentsWithCategoryData = data.contents.map((c: any) => ({
+          ...c,
+          categoryData: typeof c.category === 'object' ? c.category : null,
+        }));
+        setContents(contentsWithCategoryData);
+        setFilteredContents(contentsWithCategoryData);
       }
     } catch (error) {
       console.error('Failed to fetch contents:', error);
@@ -112,7 +121,13 @@ export default function ResourcesPage() {
     let filtered = contents;
 
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter((c) => c.category === selectedCategory);
+      // Filter by category slug, handling both object and string formats
+      filtered = filtered.filter((c) => {
+        if (typeof c.category === 'object' && c.category?.slug) {
+          return c.category.slug === selectedCategory;
+        }
+        return c.category === selectedCategory;
+      });
     }
 
     if (searchTerm) {
@@ -332,157 +347,8 @@ export default function ResourcesPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-12">
-        {/* If a post is selected, show detail view */}
-        {selectedPost ? (
-          <div>
-            {/* Back Button */}
-            <button
-              onClick={() => setSelectedPost(null)}
-              className="mb-6 flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              ← {t('resources.back')}
-            </button>
-
-            {/* Post Detail View */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              {/* Post Header */}
-              <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm">
-                    NE
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-bold text-gray-900 text-sm sm:text-lg">NutriEd</p>
-                    <p className="text-gray-500 text-xs sm:text-sm">{selectedPost.category}</p>
-                  </div>
-                  <span className="ml-auto sm:ml-auto px-3 sm:px-4 py-1 sm:py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-full text-xs sm:text-sm">
-                    {selectedPost.type === 'video' && `📹 ${t('resources.video')}`}
-                    {selectedPost.type === 'post' && `📝 ${t('resources.article')}`}
-                    {selectedPost.type === 'infographic' && `📊 ${t('resources.infographic')}`}
-                  </span>
-                </div>
-              </div>
-
-              {/* Media Display */}
-              <div className="w-full bg-gray-200 flex items-center justify-center relative overflow-hidden py-8">
-                <div className="max-w-md w-full px-4">
-                  {selectedPost.mediaUrl ? (
-                    <>
-                      {selectedPost.type === 'video' ? (
-                        <video 
-                          src={selectedPost.mediaUrl}
-                          controls
-                          className="w-full h-auto rounded-lg"
-                        />
-                      ) : (
-                        <img 
-                          src={selectedPost.mediaUrl}
-                          alt={selectedPost.title}
-                          className="w-full h-auto rounded-lg"
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-6xl">
-                      {selectedPost.type === 'video' && '📹'}
-                      {selectedPost.type === 'post' && '📝'}
-                      {selectedPost.type === 'infographic' && '📊'}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Post Content */}
-              <div className="p-4 sm:p-6 md:p-8">
-                {/* Title */}
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{selectedPost.title}</h1>
-
-                {/* Engagement Stats */}
-                <div className="flex gap-4 sm:gap-8 mb-6 sm:mb-8 pb-6 sm:pb-8 border-b border-gray-200">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">❤️</span>
-                    <div>
-                      <p className="text-sm text-gray-500">{t('resources.like')}</p>
-                      <p className="font-bold text-gray-900 text-xl">{likeCount[selectedPost._id] || 0}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="mb-6 sm:mb-8">
-                  <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">{t('resources.about')}</h2>
-                  <p className="text-gray-700 leading-relaxed text-sm sm:text-base">{selectedPost.description}</p>
-                </div>
-
-                {/* Full Content */}
-                {selectedPost.content && (
-                  <div className="mb-6 sm:mb-8">
-                    <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">{t('resources.content')}</h2>
-                    <div className="bg-gray-50 rounded-lg p-4 sm:p-6 text-gray-700 leading-relaxed text-sm sm:text-base">
-                      {selectedPost.content.split('\n').map((line: string, idx: number) => {
-                        // Check if line is an image markdown
-                        if (line.includes('![')) {
-                          const urlMatch = line.match(/!\[.*?\]\((.*?)\)/);
-                          if (urlMatch) {
-                            return (
-                              <img 
-                                key={idx}
-                                src={urlMatch[1]} 
-                                alt="Post content"
-                                className="w-full rounded-lg my-6"
-                              />
-                            );
-                          }
-                        }
-                        // Regular text
-                        return line.trim() && (
-                          <p key={idx} className="mb-4 text-base">
-                            {line}
-                          </p>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Hashtags */}
-                {selectedPost.tags && selectedPost.tags.length > 0 && (
-                  <div className="mb-8">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">{t('resources.tags')}</h2>
-                    <div className="flex flex-wrap gap-3">
-                      {selectedPost.tags.map((tag: string) => (
-                        <span
-                          key={tag}
-                          className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full font-medium text-sm"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Engagement Buttons */}
-                <div className="border-t border-gray-200 pt-6 sm:pt-8 flex gap-3 sm:gap-4">
-                  <button 
-                    onClick={() => toggleLike(selectedPost._id)}
-                    className="flex-1 flex items-center justify-center gap-2 sm:gap-3 py-2 sm:py-3 rounded-lg transition font-semibold text-sm sm:text-lg"
-                    style={{
-                      backgroundColor: likes[selectedPost._id] ? '#ffe0e6' : '#f3f4f6',
-                      color: likes[selectedPost._id] ? '#dc2626' : '#6b7280'
-                    }}
-                  >
-                    <span className="text-2xl">{likes[selectedPost._id] ? '❤️' : '🤍'}</span>
-                    {likes[selectedPost._id] ? t('resources.liked') : t('resources.like')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Search and Filter */}
-            <div className="bg-white rounded-lg shadow-md p-6 mb-12">
+        {/* Search and Filter */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-12">
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('resources.searchLabel')}
@@ -528,106 +394,116 @@ export default function ResourcesPage() {
           <>
             <div className="mb-6">
               <p className="text-gray-600">
-                <span className="font-bold text-indigo-600">{filteredContents.length}</span> {filteredContents.length !== 1 ? t('resources.resourcesFoundPlural') : t('resources.resourcesFound')} {filteredContents.length !== 1 ? t('resources.foundLabelPlural') : t('resources.foundLabel')}
+                <span className="font-bold text-indigo-600">{filteredContents.length}</span> {filteredContents.length !== 1 ? t('resources.resourcesFoundPlural') : t('resources.resourcesFound')}
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
+
+            {/* Direct Content Display - Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredContents.map((content) => (
                 <div
                   key={content._id}
-                  className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+                  className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col group"
                 >
-                  {/* Post Header */}
-                  <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                        {content.type === 'video' ? '📹' : content.type === 'post' ? '📝' : '📊'}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">NutriEd</p>
-                        <p className="text-gray-500 text-xs">{content.category ? getCategoryLabel(content.category) : 'N/A'}</p>
-                      </div>
-                    </div>
-                    <span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      {content.type === 'video' ? t('resources.video') : content.type === 'post' ? t('resources.article') : t('resources.infographic')}
-                    </span>
-                  </div>
-
-                  {/* Post Content */}
-                  <div>
-                    {/* Media/Image */}
-                  <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 h-48 sm:h-56 md:h-72 flex items-center justify-center relative overflow-hidden">
-                      {content.mediaUrl ? (
-                        content.type === 'video' ? (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-900 relative group">
-                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all flex items-center justify-center">
-                              <div className="text-white text-7xl">▶️</div>
-                            </div>
-                          </div>
-                        ) : (
-                          <img src={content.mediaUrl} alt={content.title} className="w-full h-full object-cover" />
-                        )
+                  {/* Media Display */}
+                  {content.mediaUrl ? (
+                    <div className="relative w-full aspect-square bg-gradient-to-br from-indigo-400 to-purple-500 overflow-hidden flex items-center justify-center">
+                      {content.type === 'video' ? (
+                        <video 
+                          src={content.mediaUrl}
+                          controls
+                          preload="metadata"
+                          crossOrigin="anonymous"
+                          playsInline
+                          className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                        />
                       ) : (
-                        <div className="text-white text-center">
-                          <div className="text-6xl mb-2">
-                            {content.type === 'video' && '📹'}
-                            {content.type === 'post' && '📝'}
-                            {content.type === 'infographic' && '📊'}
-                          </div>
-                        </div>
+                        <img 
+                          src={content.mediaUrl}
+                          alt={content.title}
+                          className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%234f46e5" width="400" height="300"/%3E%3Ctext x="200" y="150" text-anchor="middle" dy=".3em" fill="white" font-size="80"%3E📸%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
                       )}
                     </div>
-
-                    {/* Caption */}
-                    <div className="p-3 sm:p-4">
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2">{content.title}</h3>
-                      <p className="text-gray-600 text-xs sm:text-sm mb-3 line-clamp-3">
-                        {content.description}
-                      </p>
-
-                      {content.tags && content.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {content.tags.slice(0, 3).map((tag: string) => (
-                            <span
-                              key={tag}
-                              className="text-indigo-600 text-sm"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Engagement Buttons */}
-                    <div className="px-4 py-3 border-t border-gray-100">
-                      <div className="flex gap-4 mb-3">
-                        <button 
-                          onClick={() => toggleLike(content._id)}
-                          className="flex items-center gap-2 transition group"
-                        >
-                          <span className={`group-hover:scale-125 transition ${likes[content._id] ? 'text-red-600' : 'text-gray-500'}`}>
-                            {likes[content._id] ? '❤️' : '🤍'}
-                          </span>
-                          <span className={`text-sm ${likes[content._id] ? 'text-red-600' : 'text-gray-500'}`}>
-                            {likeCount[content._id] || 0}
-                          </span>
-                        </button>
-                        <button 
-                          onClick={() => setSelectedPost(content)}
-                          className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition group ml-auto"
-                        >
-                          <span className="group-hover:scale-125 transition">👁️</span>
-                          <span className="text-sm">{t('resources.view')}</span>
-                        </button>
+                  ) : (
+                    <div className="w-full aspect-square bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                      <div className="text-white text-6xl">
+                        {content.type === 'video' && '📹'}
+                        {content.type === 'post' && '📝'}
+                        {content.type === 'infographic' && '📊'}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Content Section */}
+                  <div className="p-5 flex flex-col flex-grow">
+                    {/* Header with Badge */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="inline-flex px-3 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full text-xs whitespace-nowrap">
+                        {content.type === 'video' && '📹'}
+                        {content.type === 'post' && '📝'}
+                        {content.type === 'infographic' && '📊'}
+                      </span>
+                      <span className="inline-flex px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs whitespace-nowrap">
+                        {content.categoryData ? (language === 'ar' ? (content.categoryData.nameAr || content.categoryData.name) : content.categoryData.name) : (typeof content.category === 'object' ? (language === 'ar' ? (content.category.nameAr || content.category.name) : content.category.name) : getCategoryLabel(content.category))}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                      {content.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
+                      {content.description}
+                    </p>
+
+                    {/* Tags */}
+                    {content.tags && content.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {content.tags.slice(0, 2).map((tag: string) => (
+                          <span
+                            key={tag}
+                            className="text-indigo-600 text-xs font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                        {content.tags.length > 2 && (
+                          <span className="text-gray-500 text-xs font-medium">+{content.tags.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Footer with Like Button */}
+                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                      <button 
+                        onClick={() => toggleLike(content._id)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg transition duration-200 hover:bg-red-50"
+                      >
+                        <span className="text-xl">{likes[content._id] ? '❤️' : '🤍'}</span>
+                        <span className={`text-sm font-semibold ${likes[content._id] ? 'text-red-600' : 'text-gray-600'}`}>
+                          {likeCount[content._id] || 0}
+                        </span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          document.getElementById(`content-${content._id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                      >
+                        Voir plus →
+                      </button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </>
-        )}
           </>
         )}
       </main>

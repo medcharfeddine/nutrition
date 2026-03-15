@@ -9,8 +9,13 @@ import { z } from 'zod';
 const contentSchema = z.object({
   title: z.string().min(3, 'Le titre doit contenir au moins 3 caracteres'),
   type: z.enum(['video', 'post', 'infographic']),
-  description: z.string().min(10, 'La description doit contenir au moins 10 caracteres'),
-  mediaUrl: z.string().url('URL invalide'),
+  description: z.string().min(1, 'La description est requise'),
+  mediaUrl: z.string()
+    .optional()
+    .refine(
+      (val) => val === undefined || val === '' || /^https?:\/\/.+/.test(val),
+      'URL invalide'
+    ),
   content: z.string().optional(),
   category: z.string().optional(), // Allow any string that will be validated against database categories
   tags: z.array(z.string()).optional(),
@@ -28,7 +33,9 @@ export async function GET(req: NextRequest) {
       query.category = category;
     }
 
-    const contents = await Content.find(query).sort({ createdAt: -1 });
+    const contents = await Content.find(query)
+      .populate('category', 'name nameAr slug')
+      .sort({ createdAt: -1 });
 
     return NextResponse.json({ contents });
   } catch (error) {
@@ -63,6 +70,7 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     // Validate category exists in database if provided
+    let categoryId = null;
     if (validatedData.data.category) {
       const categoryQuery: any = { slug: validatedData.data.category };
       
@@ -81,11 +89,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Store the slug for consistent filtering
-      validatedData.data.category = categoryExists.slug;
+      categoryId = categoryExists._id;
     }
 
-    const content = await Content.create(validatedData.data);
+    const content = await Content.create({
+      ...validatedData.data,
+      category: categoryId,
+    });
 
     return NextResponse.json(
       { message: 'Contenu cree avec succes', content },
@@ -118,6 +128,7 @@ export async function PUT(req: NextRequest) {
     const validatedData = contentSchema.partial().safeParse(body);
 
     if (!validatedData.success) {
+      console.error('Validation error:', validatedData.error.errors);
       return NextResponse.json(
         { error: validatedData.error.errors },
         { status: 400 }
@@ -145,8 +156,8 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      // Store the slug for consistent filtering
-      validatedData.data.category = categoryExists.slug;
+      // Store the ObjectId for database consistency
+      validatedData.data.category = categoryExists._id;
     }
 
     const content = await Content.findByIdAndUpdate(
@@ -154,6 +165,10 @@ export async function PUT(req: NextRequest) {
       validatedData.data,
       { new: true }
     );
+
+    if (!content) {
+      return NextResponse.json({ error: 'Contenu non trouvé' }, { status: 404 });
+    }
 
     return NextResponse.json({ message: 'Contenu mis a jour avec succes', content });
   } catch (error) {

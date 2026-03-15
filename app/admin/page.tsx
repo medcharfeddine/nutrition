@@ -556,6 +556,7 @@ export default function AdminPage() {
     content: '',
     category: '',
   });
+  const [mediaUploadType, setMediaUploadType] = useState<'image' | 'video'>('image');
   const [showContentModal, setShowContentModal] = useState(false);
   const [isEditingContent, setIsEditingContent] = useState(false);
   const [selectedContent, setSelectedContent] = useState<any>(null);
@@ -849,7 +850,7 @@ export default function AdminPage() {
   };
 
   const handleAddContent = async () => {
-    if (!newContent.title || !newContent.type || !newContent.description || !newContent.mediaUrl || !newContent.category) {
+    if (!newContent.title || !newContent.type || !newContent.description || !newContent.category) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -897,13 +898,15 @@ export default function AdminPage() {
   const openContentModal = (content?: any) => {
     if (content) {
       setSelectedContent(content);
+      // Extract slug from category object if it's populated
+      const categoryValue = typeof content.category === 'object' ? content.category.slug : content.category;
       setNewContent({
         title: content.title,
         type: content.type,
         description: content.description,
         mediaUrl: content.mediaUrl,
         content: content.content || '',
-        category: content.category,
+        category: categoryValue,
       });
       setIsEditingContent(true);
     } else {
@@ -925,6 +928,7 @@ export default function AdminPage() {
     setShowContentModal(false);
     setIsEditingContent(false);
     setSelectedContent(null);
+    setMediaUploadType('image');
     setNewContent({
       title: '',
       type: '',
@@ -1439,7 +1443,7 @@ export default function AdminPage() {
                         <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-2 sm:gap-4">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{content.title}</h3>
-                            <p className="text-xs sm:text-sm text-gray-600">{content.type} • {content.category && categories.find((c: any) => c.slug === content.category) ? (language === 'ar' && categories.find((c: any) => c.slug === content.category)?.nameAr ? categories.find((c: any) => c.slug === content.category)?.nameAr : categories.find((c: any) => c.slug === content.category)?.name) : content.category}</p>
+                            <p className="text-xs sm:text-sm text-gray-600">{content.type} • {content.category ? (typeof content.category === 'object' ? (language === 'ar' && content.category.nameAr ? content.category.nameAr : content.category.name) : (categories.find((c: any) => c.slug === content.category) ? (language === 'ar' && categories.find((c: any) => c.slug === content.category)?.nameAr ? categories.find((c: any) => c.slug === content.category)?.nameAr : categories.find((c: any) => c.slug === content.category)?.name) : content.category)) : 'No Category'}</p>
                             <p className="text-xs sm:text-sm text-gray-500 mt-2 line-clamp-2">{content.description}</p>
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
@@ -2613,20 +2617,47 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL du Média (Vidéo) *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">URL du Média (Optionnel)</label>
+                
+                {/* Media Type Selection */}
+                <div className="mb-4 flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediaType"
+                      value="image"
+                      checked={mediaUploadType === 'image'}
+                      onChange={(e) => setMediaUploadType('image')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-gray-700">📷 Image</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="mediaType"
+                      value="video"
+                      checked={mediaUploadType === 'video'}
+                      onChange={(e) => setMediaUploadType('video')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-gray-700">🎥 Vidéo</span>
+                  </label>
+                </div>
+                
                 <div className="space-y-3">
                   <FileUpload
                     onSuccess={(url) => {
                       setNewContent({ ...newContent, mediaUrl: url });
                     }}
                     onError={(error) => alert(`Erreur d'upload: ${error}`)}
-                    type="video"
-                    maxSize={100}
-                    buttonText="Télécharger Vidéo"
+                    type={mediaUploadType}
+                    maxSize={mediaUploadType === 'video' ? 500 : 50}
+                    buttonText={mediaUploadType === 'video' ? '🎥 Télécharger Vidéo' : '📷 Télécharger Image'}
                   />
                   {newContent.mediaUrl && (
                     <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm text-green-800">Vidéo uploadée: {newContent.mediaUrl.substring(0, 50)}...</p>
+                      <p className="text-sm text-green-800">{mediaUploadType === 'video' ? 'Vidéo' : 'Image'} uploadée: {newContent.mediaUrl.substring(0, 50)}...</p>
                     </div>
                   )}
                   <input
@@ -2634,7 +2665,7 @@ export default function AdminPage() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
                     value={newContent.mediaUrl}
                     onChange={(e) => setNewContent({ ...newContent, mediaUrl: e.target.value })}
-                    placeholder="Ou collez une URL vidéo"
+                    placeholder={`Ou collez une URL ${mediaUploadType === 'video' ? 'vidéo' : 'image'}`}
                   />
                 </div>
               </div>

@@ -28,7 +28,12 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchBranding = async () => {
       try {
-        const res = await fetch('/api/admin/branding');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        
+        const res = await fetch('/api/admin/branding', { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
         if (res.ok) {
           const data = await res.json();
           setBranding({
@@ -53,9 +58,11 @@ export function BrandingProvider({ children }: { children: React.ReactNode }) {
           if (data.branding.siteName) {
             document.title = data.branding.siteName;
           }
+        } else {
+          setBranding((prev) => ({ ...prev, loading: false }));
         }
       } catch (error) {
-        console.error('Failed to fetch branding:', error);
+        // Silently fail with defaults - don't spam console
         setBranding((prev) => ({ ...prev, loading: false }));
       }
     };
