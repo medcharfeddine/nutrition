@@ -128,7 +128,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 }
 
-// Delete file from Cloudinary
+// Delete file from Cloudinaryyy
 export async function DELETE(req: NextRequest) {
   try {
     const session = await auth();
