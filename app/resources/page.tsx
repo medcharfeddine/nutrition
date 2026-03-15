@@ -23,6 +23,8 @@ export default function ResourcesPage() {
   const [branding, setBranding] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -403,7 +405,11 @@ export default function ResourcesPage() {
               {filteredContents.map((content) => (
                 <div
                   key={content._id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col group"
+                  className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden flex flex-col group cursor-pointer"
+                  onClick={() => {
+                    setSelectedContent(content);
+                    setIsModalOpen(true);
+                  }}
                 >
                   {/* Media Display */}
                   {content.mediaUrl ? (
@@ -482,7 +488,10 @@ export default function ResourcesPage() {
                     {/* Footer with Like Button */}
                     <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                       <button 
-                        onClick={() => toggleLike(content._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleLike(content._id);
+                        }}
                         className="flex items-center gap-2 px-3 py-2 rounded-lg transition duration-200 hover:bg-red-50"
                       >
                         <span className="text-xl">{likes[content._id] ? '❤️' : '🤍'}</span>
@@ -492,8 +501,10 @@ export default function ResourcesPage() {
                       </button>
                       
                       <button 
-                        onClick={() => {
-                          document.getElementById(`content-${content._id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedContent(content);
+                          setIsModalOpen(true);
                         }}
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"
                       >
@@ -507,6 +518,144 @@ export default function ResourcesPage() {
           </>
         )}
       </main>
+
+      {/* Modal */}
+      {isModalOpen && selectedContent && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+          onClick={() => {
+            setIsModalOpen(false);
+            setSelectedContent(null);
+          }}
+        >
+          <div 
+            className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 flex justify-between items-center p-6">
+              <h2 className="text-2xl font-bold text-gray-900">{selectedContent.title}</h2>
+              <button
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedContent(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Media Display */}
+              {selectedContent.mediaUrl && (
+                <div className="bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg overflow-hidden flex items-center justify-center h-96">
+                  {selectedContent.type === 'video' ? (
+                    <video 
+                      src={selectedContent.mediaUrl}
+                      controls
+                      preload="metadata"
+                      crossOrigin="anonymous"
+                      playsInline
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <img 
+                      src={selectedContent.mediaUrl}
+                      alt={selectedContent.title}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%234f46e5" width="400" height="300"/%3E%3Ctext x="200" y="150" text-anchor="middle" dy=".3em" fill="white" font-size="80"%3E📸%3C/text%3E%3C/svg%3E';
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {/* Category and Type Badges */}
+              <div className="flex flex-wrap gap-3">
+                <span className="inline-flex px-4 py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-full text-sm">
+                  {selectedContent.type === 'video' && '📹 Video'}
+                  {selectedContent.type === 'post' && '📝 Article'}
+                  {selectedContent.type === 'infographic' && '📊 Infographic'}
+                </span>
+                <span className="inline-flex px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  {selectedContent.categoryData ? (language === 'ar' ? (selectedContent.categoryData.nameAr || selectedContent.categoryData.name) : selectedContent.categoryData.name) : (typeof selectedContent.category === 'object' ? (language === 'ar' ? (selectedContent.category.nameAr || selectedContent.category.name) : selectedContent.category.name) : getCategoryLabel(selectedContent.category))}
+                </span>
+              </div>
+
+              {/* Description */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                <p className="text-gray-700 leading-relaxed">{selectedContent.description}</p>
+              </div>
+
+              {/* Full Content */}
+              {selectedContent.content && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contenu</h3>
+                  <div className="bg-gray-50 rounded-lg p-6 text-gray-700 leading-relaxed space-y-4 prose prose-sm max-w-none">
+                    {selectedContent.content.split('\n').map((line: string, idx: number) => {
+                      if (line.includes('![')) {
+                        const urlMatch = line.match(/!\[.*?\]\((.*?)\)/);
+                        if (urlMatch) {
+                          return (
+                            <img 
+                              key={idx}
+                              src={urlMatch[1]} 
+                              alt="Content"
+                              className="w-full rounded-lg my-4"
+                            />
+                          );
+                        }
+                      }
+                      return line.trim() && (
+                        <p key={idx}>{line}</p>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Tags */}
+              {selectedContent.tags && selectedContent.tags.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedContent.tags.map((tag: string) => (
+                      <span
+                        key={tag}
+                        className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full font-medium text-sm"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Like Button */}
+              <div className="border-t border-gray-200 pt-6">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLike(selectedContent._id);
+                  }}
+                  className="flex items-center gap-3 px-6 py-3 rounded-lg transition font-semibold text-lg"
+                  style={{
+                    backgroundColor: likes[selectedContent._id] ? '#ffe0e6' : '#f3f4f6',
+                    color: likes[selectedContent._id] ? '#dc2626' : '#6b7280'
+                  }}
+                >
+                  <span className="text-2xl">{likes[selectedContent._id] ? '❤️' : '🤍'}</span>
+                  {likes[selectedContent._id] ? t('resources.liked') : t('resources.like')} ({likeCount[selectedContent._id] || 0})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
